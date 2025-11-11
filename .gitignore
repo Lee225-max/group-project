@@ -1,0 +1,70 @@
+# 虚拟环境
+.venv/
+venv/
+env/
+
+# 数据库文件
+*.db
+*.sqlite3
+*.db-journal
+
+# Python 缓存文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 测试覆盖率
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# 日志文件
+*.log
+logs/
+
+# IDE 和编辑器
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 打包输出
+dist/
+build/
+*.egg-info/
+
+# 操作系统
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# 环境变量
+.env
+.env.local
+.env.production
+.env.development
+
+# 临时文件
+temp/
+tmp/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# PyInstaller
+*.manifest
+*.spec
+
+# 安装包
+*.msi
+*.msm
+*.msp
