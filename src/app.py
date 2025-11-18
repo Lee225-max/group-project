@@ -126,13 +126,13 @@ class ReviewAlarmApp:
 
         # 集成成员C的模块
         from scheduler.ui import ReviewSchedulerFrame
+
         review_frame = ReviewSchedulerFrame(
-            self.content_frame,
-            self.current_user,
-            self.db_manager
+            self.content_frame, self.current_user, self.db_manager
         )
         review_frame.pack(fill="both", expand=True)
-#
+
+    #
 
     def show_analytics(self):
         """显示统计分析界面"""
@@ -178,9 +178,3 @@ class ReviewAlarmApp:
 
     def run(self):
         """运行应用"""
-<<<<<<< HEAD
-from src.database.manager import DatabaseManager
-
-=======
-        self.root.mainloop()
->>>>>>> 3bfefc1 (fix: correct import paths in app.py, knowledge ui and auth service)

@@ -25,10 +25,14 @@ class SchedulerService:
         session = self.db_manager.get_session()
         try:
             # 获取知识点
-            knowledge_item = session.query(KnowledgeItem).filter(
-                KnowledgeItem.id == knowledge_item_id,
-                KnowledgeItem.user_id == user_id
-            ).first()
+            knowledge_item = (
+                session.query(KnowledgeItem)
+                .filter(
+                    KnowledgeItem.id == knowledge_item_id,
+                    KnowledgeItem.user_id == user_id,
+                )
+                .first()
+            )
 
             if not knowledge_item:
                 raise ValueError("知识点不存在")
@@ -44,7 +48,7 @@ class SchedulerService:
                     user_id=user_id,
                     knowledge_item_id=knowledge_item_id,
                     scheduled_date=review_time,
-                    review_stage=i
+                    review_stage=i,
                 )
                 session.add(schedule)
 
@@ -60,30 +64,44 @@ class SchedulerService:
         """获取今日需要复习的内容"""
         session = self.db_manager.get_session()
         try:
-            today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_start = datetime.now().replace(
+                hour=0, minute=0, second=0, microsecond=0
+            )
             today_end = today_start + timedelta(days=1)
 
-            return session.query(ReviewSchedule).filter(
-                ReviewSchedule.user_id == user_id,
-                ReviewSchedule.scheduled_date >= today_start,
-                ReviewSchedule.scheduled_date < today_end,
-                ReviewSchedule.completed == False
-            ).all()
+            return (
+                session.query(ReviewSchedule)
+                .filter(
+                    ReviewSchedule.user_id == user_id,
+                    ReviewSchedule.scheduled_date >= today_start,
+                    ReviewSchedule.scheduled_date < today_end,
+                    ReviewSchedule.completed == False,
+                )
+                .all()
+            )
         finally:
             session.close()
 
-    def complete_review(self, schedule_id: int, recall_score: float, review_duration: int = None):
+    def complete_review(
+        self, schedule_id: int, recall_score: float, review_duration: int = None
+    ):
         """完成复习"""
         session = self.db_manager.get_session()
         try:
-            schedule = session.query(ReviewSchedule).filter(ReviewSchedule.id == schedule_id).first()
+            schedule = (
+                session.query(ReviewSchedule)
+                .filter(ReviewSchedule.id == schedule_id)
+                .first()
+            )
             if schedule:
                 schedule.completed = True
 
                 # 更新知识点的最后复习时间
-                knowledge_item = session.query(KnowledgeItem).filter(
-                    KnowledgeItem.id == schedule.knowledge_item_id
-                ).first()
+                knowledge_item = (
+                    session.query(KnowledgeItem)
+                    .filter(KnowledgeItem.id == schedule.knowledge_item_id)
+                    .first()
+                )
                 if knowledge_item:
                     knowledge_item.last_reviewed = datetime.now()
 

@@ -1,6 +1,7 @@
 """
 认证模块测试 - GUI 版本
 """
+
 from src.auth.service import AuthService
 from src.database.manager import DatabaseManager
 
