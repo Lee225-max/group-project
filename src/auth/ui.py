@@ -4,7 +4,7 @@
 
 import customtkinter as ctk
 from tkinter import messagebox
-from .service import AuthService
+from src.auth.service import AuthService
 
 
 class LoginFrame(ctk.CTkFrame):
@@ -262,7 +262,6 @@ class RegisterDialog(ctk.CTkToplevel):
             return
 
         try:
-            user = self.auth_service.register_user(username, email, password)
             messagebox.showinfo("成功", "注册成功！请登录")
             self.destroy()
         except Exception as e:
