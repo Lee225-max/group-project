@@ -262,6 +262,8 @@ class RegisterDialog(ctk.CTkToplevel):
             return
 
         try:
+            # 添加实际注册逻辑
+            self.auth_service.register_user(username, email, password)
             messagebox.showinfo("成功", "注册成功！请登录")
             self.destroy()
         except Exception as e:

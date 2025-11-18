@@ -78,7 +78,10 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
 
     def load_knowledge_items(self, items=None):
         """加载知识项列表"""
+        print("🔄 开始加载知识点列表... - ui.py:81")
+    
         if items is None:
+            print("📝 从数据库查询知识点... - ui.py:84")
             items = self.knowledge_service.get_user_knowledge_items(
                 self.current_user.id
             )
@@ -89,6 +92,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
 
         if not items:
             # 显示空状态
+            print("📭 没有知识点，显示空状态 - ui.py:95")
             empty_label = ctk.CTkLabel(
                 self.scrollable_frame,
                 text="暂无知识点，点击“添加知识点”开始创建",
@@ -97,9 +101,11 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             empty_label.pack(pady=50)
             return
 
+        print(f"🎯 创建 {len(items)} 个知识点行 - ui.py:104")
         for item in items:
             self.create_item_row(item)
-
+        print("✅ 知识点列表加载完成 - ui.py:107")
+        
     def create_item_row(self, item):
         """创建知识项行"""
         row = ctk.CTkFrame(self.scrollable_frame)
@@ -157,12 +163,20 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
 
     def add_knowledge_item(self):
         """添加知识点"""
+        print("📝 打开添加知识点对话框... - ui.py:166")
+        # 打开添加对话框
         KnowledgeItemDialog(
-            self, self.current_user, self.knowledge_service, self.load_knowledge_items
+            self,
+            self.current_user,
+            self.knowledge_service,
+            self.load_knowledge_items,
+            None  # 没有item表示添加模式
         )
 
     def edit_item(self, item):
         """编辑知识点"""
+        print(f"✏️ 打开编辑知识点对话框: {item.title} - ui.py:178")
+        print(f"回调函数: {self.load_knowledge_items} - ui.py:179")
         KnowledgeItemDialog(
             self,
             self.current_user,
@@ -198,13 +212,22 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
     def on_search(self, event=None):
         """搜索功能"""
         search_term = self.search_entry.get().strip()
-        if search_term:
-            items = self.knowledge_service.search_knowledge_items(
-                self.current_user.id, search_term
-            )
-            self.load_knowledge_items(items)
-        else:
-            self.load_knowledge_items()
+        print(f"🔍 执行搜索: '{search_term}'  用户ID: {self.current_user.id} - ui.py:215")
+        
+        try:
+            if search_term:
+                print("📝 调用搜索服务... - ui.py:219")
+                items = self.knowledge_service.search_knowledge_items(
+                    self.current_user.id, search_term
+                )
+                print(f"📊 搜索返回 {len(items)} 个结果 - ui.py:223")
+                self.load_knowledge_items(items)
+            else:
+                print("🔄 搜索词为空，显示所有知识点 - ui.py:226")
+                self.load_knowledge_items()
+        except Exception as e:
+            print(f"❌ 搜索过程中出错: {e} - ui.py:229")
+            messagebox.showerror("错误", f"搜索失败: {str(e)}")
 
 
 class KnowledgeItemDialog(ctk.CTkToplevel):
@@ -283,20 +306,32 @@ class KnowledgeItemDialog(ctk.CTkToplevel):
         try:
             if self.item:
                 # 更新现有项
-                self.knowledge_service.update_knowledge_item(
+                result = self.knowledge_service.update_knowledge_item(
                     self.item.id, title=title, category=category, content=content
                 )
+                print(f"✅ 知识点更新成功: {title} - ui.py:312")
             else:
                 # 创建新项
-                self.knowledge_service.add_knowledge_item(
+                result = self.knowledge_service.add_knowledge_item(
                     self.user.id, title, content, category
                 )
-
-            self.callback()
+                print(f"✅ 知识点创建成功: {title} - ui.py:318")
+                
+            print("🔄 准备调用回调函数刷新列表... - ui.py:320")
+            print(f"回调函数: {self.callback} - ui.py:321")
+            
+            if self.callback:
+                self.callback()
+                print("🔄 回调函数已调用 - ui.py:325")
+            else:
+                print("⚠️ 回调函数不存在，无法刷新列表 - ui.py:327")
+                
             self.destroy()
             messagebox.showinfo("成功", "知识点已保存")
+            
         except Exception as e:
             messagebox.showerror("错误", f"保存失败: {str(e)}")
+            print(f"❌ 保存失败: {e} - ui.py:334")
 
 
 class KnowledgeItemDetailDialog(ctk.CTkToplevel):
