@@ -28,9 +28,9 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             toolbar, text="知识管理", font=ctk.CTkFont(size=20, weight="bold")
         ).pack(side="left")
 
-        ctk.CTkButton(
-            toolbar, text="+ 添加知识点", command=self.add_knowledge_item
-        ).pack(side="right", padx=5)
+        ctk.CTkButton(toolbar, text="+ 添加知识点", command=self.add_knowledge_item).pack(
+            side="right", padx=5
+        )
 
         # 搜索框
         search_frame = ctk.CTkFrame(self)

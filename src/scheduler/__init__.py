@@ -7,8 +7,8 @@ from .service import SchedulerService
 from .ui import ReviewSchedulerFrame, ReviewDialog
 
 __all__ = [
-    'EbbinghausScheduler',
-    'SchedulerService',
-    'ReviewSchedulerFrame',
-    'ReviewDialog'
+    "EbbinghausScheduler",
+    "SchedulerService",
+    "ReviewSchedulerFrame",
+    "ReviewDialog",
 ]
