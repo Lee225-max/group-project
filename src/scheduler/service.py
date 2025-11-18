@@ -8,6 +8,7 @@
 """
 
 from datetime import datetime, timedelta
+from typing import List
 from src.database.manager import DatabaseManager
 from src.database.models import ReviewSchedule, KnowledgeItem
 from .algorithms import EbbinghausScheduler
@@ -75,7 +76,7 @@ class SchedulerService:
                     ReviewSchedule.user_id == user_id,
                     ReviewSchedule.scheduled_date >= today_start,
                     ReviewSchedule.scheduled_date < today_end,
-                    ReviewSchedule.completed == False,
+                    ReviewSchedule.completed.is_(False),
                 )
                 .all()
             )

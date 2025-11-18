@@ -4,7 +4,6 @@
 
 import customtkinter as ctk
 from tkinter import messagebox
-from datetime import datetime
 from .service import SchedulerService
 from src.database.models import ReviewSchedule, KnowledgeItem
 
