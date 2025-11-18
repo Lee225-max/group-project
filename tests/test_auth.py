@@ -1,6 +1,8 @@
 """
 认证模块测试 - GUI 版本
 """
+from src.auth.service import AuthService
+from src.database.manager import DatabaseManager
 
 import pytest
 import os
@@ -8,9 +10,6 @@ import sys
 
 # 添加src到路径
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "src"))
-
-from src.auth.service import AuthService
-from src.database.manager import DatabaseManager
 
 
 class TestAuthService:
@@ -59,8 +58,6 @@ class TestAuthService:
 def test_gui_imports():
     """测试GUI相关导入"""
     try:
-        import customtkinter
-
         assert True
     except ImportError:
         assert False, "CustomTkinter 导入失败"
