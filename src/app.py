@@ -4,8 +4,9 @@
 
 import customtkinter as ctk
 
-# 使用相对导入
-from database.manager import DatabaseManager
+# 使用绝对导入
+from src.database.manager import DatabaseManager
+from src.auth.ui import LoginFrame  # 修复这行导入
 
 
 class ReviewAlarmApp:
@@ -45,9 +46,7 @@ class ReviewAlarmApp:
 
     def show_login(self):
         """显示登录界面"""
-        # 使用相对导入
-        from auth.ui import LoginFrame
-
+        # 删除这里的重复导入，因为已经在文件顶部导入了
         self.clear_main_container()
 
         self.login_frame = LoginFrame(
@@ -179,6 +178,9 @@ class ReviewAlarmApp:
 
     def run(self):
         """运行应用"""
+<<<<<<< HEAD
+from src.database.manager import DatabaseManager
+
+=======
         self.root.mainloop()
-
-
+>>>>>>> 3bfefc1 (fix: correct import paths in app.py, knowledge ui and auth service)
