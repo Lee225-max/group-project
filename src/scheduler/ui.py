@@ -1,3 +1,11 @@
+<<<<<<< HEAD
+=======
+# -*- codeing =utf-8 -*-
+# @Time : 2025/11/18 13:44
+# @Author: Muncy
+# @File : ui.py.py
+# @Software: PyCharm
+>>>>>>> 2942adbcb4ab1ce7c4645c5bd6cf2149eec1a1d1
 """
 复习调度界面 - 成员C实现
 """
@@ -28,25 +36,18 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
         toolbar.pack(fill="x", padx=10, pady=10)
 
         ctk.CTkLabel(
-            toolbar,
-            text="今日复习计划",
-            font=ctk.CTkFont(size=20, weight="bold")
+            toolbar, text="今日复习计划", font=ctk.CTkFont(size=20, weight="bold")
         ).pack(side="left")
 
         # 统计信息
         self.stats_label = ctk.CTkLabel(
-            toolbar,
-            text="加载中...",
-            font=ctk.CTkFont(size=14)
+            toolbar, text="加载中...", font=ctk.CTkFont(size=14)
         )
         self.stats_label.pack(side="right")
 
         # 刷新按钮
         refresh_btn = ctk.CTkButton(
-            toolbar,
-            text="刷新",
-            command=self.load_today_reviews,
-            width=80
+            toolbar, text="刷新", command=self.load_today_reviews, width=80
         )
         refresh_btn.pack(side="right", padx=(10, 0))
 
@@ -63,7 +64,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
             self.review_list_frame,
             text="今日没有复习计划\n快去添加一些知识点吧！",
             font=ctk.CTkFont(size=16),
-            text_color="gray"
+            text_color="gray",
         )
 
     def load_today_reviews(self):
@@ -73,7 +74,9 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
             widget.destroy()
 
         try:
-            today_reviews = self.scheduler_service.get_today_reviews(self.current_user.id)
+            today_reviews = self.scheduler_service.get_today_reviews(
+                self.current_user.id
+            )
 
             if not today_reviews:
                 self.empty_label.pack(expand=True, pady=50)
@@ -97,9 +100,11 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
         session = self.db_manager.get_session()
         try:
             # 获取知识点信息
-            knowledge_item = session.query(KnowledgeItem).filter(
-                KnowledgeItem.id == review.knowledge_item_id
-            ).first()
+            knowledge_item = (
+                session.query(KnowledgeItem)
+                .filter(KnowledgeItem.id == review.knowledge_item_id)
+                .first()
+            )
 
             if not knowledge_item:
                 return
@@ -117,7 +122,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                 content_frame,
                 text=knowledge_item.title,
                 font=ctk.CTkFont(size=16, weight="bold"),
-                anchor="w"
+                anchor="w",
             )
             title_label.pack(anchor="w")
 
@@ -127,19 +132,22 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                     text=f"分类: {knowledge_item.category}",
                     font=ctk.CTkFont(size=12),
                     text_color="gray",
-                    anchor="w"
+                    anchor="w",
                 )
                 category_label.pack(anchor="w", pady=(2, 0))
 
             # 复习内容预览
-            content_preview = knowledge_item.content[:100] + "..." if len(
-                knowledge_item.content) > 100 else knowledge_item.content
+            content_preview = (
+                knowledge_item.content[:100] + "..."
+                if len(knowledge_item.content) > 100
+                else knowledge_item.content
+            )
             content_label = ctk.CTkLabel(
                 content_frame,
                 text=content_preview,
                 font=ctk.CTkFont(size=12),
                 anchor="w",
-                justify="left"
+                justify="left",
             )
             content_label.pack(anchor="w", pady=(5, 0), fill="x")
 
@@ -151,7 +159,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                 info_frame,
                 text=f"第 {review.review_stage + 1} 次复习",
                 font=ctk.CTkFont(size=12),
-                text_color="blue"
+                text_color="blue",
             )
             stage_label.pack(side="left")
 
@@ -159,7 +167,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                 info_frame,
                 text=f"计划时间: {review.scheduled_date.strftime('%H:%M')}",
                 font=ctk.CTkFont(size=12),
-                text_color="gray"
+                text_color="gray",
             )
             time_label.pack(side="left", padx=(20, 0))
 
@@ -174,7 +182,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                     text="开始复习",
                     command=lambda r=review: self.start_review(r),
                     fg_color="#28a745",
-                    hover_color="#218838"
+                    hover_color="#218838",
                 )
                 review_btn.pack(side="left")
             else:
@@ -183,7 +191,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                     button_frame,
                     text="✅ 已完成",
                     font=ctk.CTkFont(size=12, weight="bold"),
-                    text_color="green"
+                    text_color="green",
                 )
                 completed_label.pack(side="left")
 
@@ -196,7 +204,17 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
 
     def start_review(self, review: ReviewSchedule):
         """开始复习"""
+<<<<<<< HEAD
         ReviewDialog(self, review, self.scheduler_service, self.db_manager, self.load_today_reviews)
+=======
+        ReviewDialog(
+            self,
+            review,
+            self.scheduler_service,
+            self.db_manager,
+            self.load_today_reviews,
+        )
+>>>>>>> 2942adbcb4ab1ce7c4645c5bd6cf2149eec1a1d1
 
 
 class ReviewDialog(ctk.CTkToplevel):
@@ -230,15 +248,21 @@ class ReviewDialog(ctk.CTkToplevel):
         height = self.winfo_height()
         x = (self.winfo_screenwidth() // 2) - (width // 2)
         y = (self.winfo_screenheight() // 2) - (height // 2)
+<<<<<<< HEAD
         self.geometry(f'+{x}+{y}')
+=======
+        self.geometry(f"+{x}+{y}")
+>>>>>>> 2942adbcb4ab1ce7c4645c5bd6cf2149eec1a1d1
 
     def load_knowledge_item(self):
         """加载知识点内容"""
         session = self.db_manager.get_session()
         try:
-            self.knowledge_item = session.query(KnowledgeItem).filter(
-                KnowledgeItem.id == self.review.knowledge_item_id
-            ).first()
+            self.knowledge_item = (
+                session.query(KnowledgeItem)
+                .filter(KnowledgeItem.id == self.review.knowledge_item_id)
+                .first()
+            )
         finally:
             session.close()
 
@@ -257,7 +281,7 @@ class ReviewDialog(ctk.CTkToplevel):
         title_label = ctk.CTkLabel(
             main_container,
             text=self.knowledge_item.title,
-            font=ctk.CTkFont(size=20, weight="bold")
+            font=ctk.CTkFont(size=20, weight="bold"),
         )
         title_label.pack(pady=(0, 10))
 
@@ -267,7 +291,7 @@ class ReviewDialog(ctk.CTkToplevel):
                 main_container,
                 text=f"分类: {self.knowledge_item.category}",
                 font=ctk.CTkFont(size=14),
-                text_color="gray"
+                text_color="gray",
             )
             category_label.pack(pady=(0, 20))
 
@@ -277,16 +301,12 @@ class ReviewDialog(ctk.CTkToplevel):
 
         # 内容标签
         ctk.CTkLabel(
-            content_frame,
-            text="知识点内容:",
-            font=ctk.CTkFont(size=14, weight="bold")
+            content_frame, text="知识点内容:", font=ctk.CTkFont(size=14, weight="bold")
         ).pack(anchor="w", pady=(10, 5))
 
         # 内容显示
         content_text = ctk.CTkTextbox(
-            content_frame,
-            wrap="word",
-            font=ctk.CTkFont(size=12)
+            content_frame, wrap="word", font=ctk.CTkFont(size=12)
         )
         content_text.pack(fill="both", expand=True, padx=10, pady=5)
         content_text.insert("1.0", self.knowledge_item.content)
@@ -297,35 +317,37 @@ class ReviewDialog(ctk.CTkToplevel):
         evaluation_frame.pack(fill="x", pady=10)
 
         ctk.CTkLabel(
-            evaluation_frame,
-            text="回忆程度评估:",
-            font=ctk.CTkFont(size=14, weight="bold")
+            evaluation_frame, text="回忆程度评估:", font=ctk.CTkFont(size=14, weight="bold")
         ).pack(anchor="w", pady=(10, 5))
 
         # 回忆程度滑块
         slider_frame = ctk.CTkFrame(evaluation_frame, fg_color="transparent")
         slider_frame.pack(fill="x", padx=10, pady=5)
 
-        ctk.CTkLabel(slider_frame, text="完全忘记", font=ctk.CTkFont(size=12)).pack(side="left")
+        ctk.CTkLabel(slider_frame, text="完全忘记", font=ctk.CTkFont(size=12)).pack(
+            side="left"
+        )
 
         self.recall_slider = ctk.CTkSlider(
             slider_frame,
             from_=0,
             to=1,
             number_of_steps=10,
-            command=self.on_slider_change
+            command=self.on_slider_change,
         )
         self.recall_slider.pack(side="left", fill="x", expand=True, padx=10)
         self.recall_slider.set(0.5)  # 默认值
 
-        ctk.CTkLabel(slider_frame, text="完全记得", font=ctk.CTkFont(size=12)).pack(side="left")
+        ctk.CTkLabel(slider_frame, text="完全记得", font=ctk.CTkFont(size=12)).pack(
+            side="left"
+        )
 
         # 分数显示
         self.score_label = ctk.CTkLabel(
             evaluation_frame,
             text="回忆分数: 50%",
             font=ctk.CTkFont(size=12),
-            text_color="blue"
+            text_color="blue",
         )
         self.score_label.pack(pady=5)
 
@@ -339,17 +361,13 @@ class ReviewDialog(ctk.CTkToplevel):
             text="完成复习",
             command=self.complete_review,
             height=40,
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14, weight="bold"),
         )
         complete_btn.pack(side="left", padx=(0, 10), expand=True)
 
         # 取消按钮
         cancel_btn = ctk.CTkButton(
-            button_frame,
-            text="稍后复习",
-            command=self.destroy,
-            height=40,
-            fg_color="gray"
+            button_frame, text="稍后复习", command=self.destroy, height=40, fg_color="gray"
         )
         cancel_btn.pack(side="right", padx=(10, 0), expand=True)
 
@@ -363,8 +381,7 @@ class ReviewDialog(ctk.CTkToplevel):
         """完成复习"""
         try:
             success = self.scheduler_service.complete_review(
-                self.review.id,
-                self.recall_score
+                self.review.id, self.recall_score
             )
 
             if success:
@@ -375,4 +392,8 @@ class ReviewDialog(ctk.CTkToplevel):
                 messagebox.showerror("错误", "复习完成失败")
 
         except Exception as e:
+<<<<<<< HEAD
             messagebox.showerror("错误", f"复习完成失败: {str(e)}")
+=======
+            messagebox.showerror("错误", f"复习完成失败: {str(e)}")
+>>>>>>> 2942adbcb4ab1ce7c4645c5bd6cf2149eec1a1d1

@@ -7,6 +7,8 @@ import customtkinter as ctk
 # 使用绝对导入
 from src.database.manager import DatabaseManager
 from src.auth.ui import LoginFrame  # 修复这行导入
+# 集成成员C的模块
+from src.scheduler.ui import ReviewSchedulerFrame  # 修复这行导入
 
 
 class ReviewAlarmApp:
@@ -123,16 +125,14 @@ class ReviewAlarmApp:
     def show_today_review(self):
         """显示今日复习界面"""
         self.clear_content_frame()
-
-        # 集成成员C的模块
-        from scheduler.ui import ReviewSchedulerFrame
-
+        
         review_frame = ReviewSchedulerFrame(
-            self.content_frame, self.current_user, self.db_manager
+            self.content_frame,
+            self.current_user,
+            self.db_manager
         )
         review_frame.pack(fill="both", expand=True)
-
-    #
+#
 
     def show_analytics(self):
         """显示统计分析界面"""
@@ -178,3 +178,4 @@ class ReviewAlarmApp:
 
     def run(self):
         """运行应用"""
+        self.root.mainloop()
