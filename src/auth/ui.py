@@ -4,7 +4,7 @@
 
 import customtkinter as ctk
 from tkinter import messagebox
-from .service import AuthService
+from src.auth.service import AuthService
 
 
 class LoginFrame(ctk.CTkFrame):
