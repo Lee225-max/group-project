@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # -*- codeing =utf-8 -*-
 # @Time : 2025/11/18 13:44
 # @Author: Muncy
@@ -202,11 +203,20 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
     def start_review(self, review: ReviewSchedule):
         """开始复习"""
         ReviewDialog(self, review, self.scheduler_service, self.db_manager, self.load_today_reviews)
+=======
+"""
+复习调度器界面 - 成员C负责
+"""
+
+import customtkinter as ctk
+from datetime import datetime, timedelta
+>>>>>>> ceab570 (feat: add ReviewDialog for knowledge review)
 
 
 class ReviewDialog(ctk.CTkToplevel):
     """复习对话框"""
 
+<<<<<<< HEAD
     def __init__(self, parent, review, scheduler_service, db_manager, refresh_callback):
         super().__init__(parent)
         self.review = review
@@ -225,6 +235,18 @@ class ReviewDialog(ctk.CTkToplevel):
         self.knowledge_item = None
         self.recall_score = 0.5  # 默认回忆分数
         self.load_knowledge_item()
+=======
+    def __init__(self, parent, item, user, db_manager):
+        super().__init__(parent)
+        self.item = item
+        self.user = user
+        self.db_manager = db_manager
+        
+        self.title(f"复习: {item.title}")
+        self.geometry("500x400")
+        self.resizable(False, False)
+        
+>>>>>>> ceab570 (feat: add ReviewDialog for knowledge review)
         self.create_widgets()
         self.center_window()
 
@@ -235,6 +257,7 @@ class ReviewDialog(ctk.CTkToplevel):
         height = self.winfo_height()
         x = (self.winfo_screenwidth() // 2) - (width // 2)
         y = (self.winfo_screenheight() // 2) - (height // 2)
+<<<<<<< HEAD
         self.geometry(f'+{x}+{y}')
 
     def load_knowledge_item(self):
@@ -254,10 +277,17 @@ class ReviewDialog(ctk.CTkToplevel):
             self.destroy()
             return
 
+=======
+        self.geometry(f"+{x}+{y}")
+
+    def create_widgets(self):
+        """创建对话框组件"""
+>>>>>>> ceab570 (feat: add ReviewDialog for knowledge review)
         # 主容器
         main_container = ctk.CTkFrame(self)
         main_container.pack(fill="both", expand=True, padx=20, pady=20)
 
+<<<<<<< HEAD
         # 标题
         title_label = ctk.CTkLabel(
             main_container,
@@ -381,3 +411,116 @@ class ReviewDialog(ctk.CTkToplevel):
 
         except Exception as e:
             messagebox.showerror("错误", f"复习完成失败: {str(e)}")
+=======
+        # 知识点标题
+        title_label = ctk.CTkLabel(
+            main_container,
+            text=self.item.title,
+            font=ctk.CTkFont(size=16, weight="bold"),
+            wraplength=400,
+        )
+        title_label.pack(anchor="w", pady=(0, 10))
+
+        # 分类信息
+        if self.item.category:
+            category_label = ctk.CTkLabel(
+                main_container,
+                text=f"分类: {self.item.category}",
+                font=ctk.CTkFont(size=12),
+            )
+            category_label.pack(anchor="w", pady=(0, 10))
+
+        # 内容显示区域
+        content_label = ctk.CTkLabel(
+            main_container, text="内容:", font=ctk.CTkFont(size=14, weight="bold")
+        )
+        content_label.pack(anchor="w", pady=(0, 5))
+
+        content_frame = ctk.CTkFrame(main_container)
+        content_frame.pack(fill="both", expand=True, pady=(0, 15))
+
+        content_text = ctk.CTkTextbox(content_frame, wrap="word")
+        content_text.pack(fill="both", expand=True, padx=10, pady=10)
+        content_text.insert("1.0", self.item.content)
+        content_text.configure(state="disabled")
+
+        # 复习难度选择
+        difficulty_frame = ctk.CTkFrame(main_container)
+        difficulty_frame.pack(fill="x", pady=(0, 15))
+
+        ctk.CTkLabel(
+            difficulty_frame, text="复习难度:", font=ctk.CTkFont(size=12, weight="bold")
+        ).pack(anchor="w", pady=(0, 5))
+
+        self.difficulty_var = ctk.StringVar(value="medium")
+
+        difficulties = [
+            ("困难", "hard"),
+            ("中等", "medium"),
+            ("简单", "easy"),
+        ]
+
+        for text, value in difficulties:
+            ctk.CTkRadioButton(
+                difficulty_frame,
+                text=text,
+                variable=self.difficulty_var,
+                value=value,
+            ).pack(side="left", padx=(0, 10))
+
+        # 按钮框架
+        button_frame = ctk.CTkFrame(main_container, fg_color="transparent")
+        button_frame.pack(fill="x")
+
+        ctk.CTkButton(
+            button_frame,
+            text="完成复习",
+            fg_color="#5cb85c",
+            hover_color="#4cae4c",
+            command=self.complete_review,
+        ).pack(side="left", padx=(0, 10))
+
+        ctk.CTkButton(button_frame, text="稍后提醒", command=self.snooze_review).pack(
+            side="left", padx=(0, 10)
+        )
+
+        ctk.CTkButton(button_frame, text="取消", command=self.destroy).pack(side="left")
+
+    def complete_review(self):
+        """完成复习"""
+        # 这里应该调用调度算法更新下一次复习时间
+        try:
+            # 模拟更新复习记录
+            next_review = self.calculate_next_review()
+            
+            # 在实际实现中，这里应该调用scheduler服务来更新复习计划
+            # self.scheduler_service.update_review_schedule(...)
+            
+            from tkinter import messagebox
+            messagebox.showinfo("成功", f"复习完成！下次复习时间: {next_review}")
+            self.destroy()
+        except Exception as e:
+            from tkinter import messagebox
+            messagebox.showerror("错误", f"复习记录更新失败: {str(e)}")
+
+    def snooze_review(self):
+        """稍后提醒"""
+        # 设置一段时间后再次提醒
+        from tkinter import messagebox
+        messagebox.showinfo("提示", "将在1小时后再次提醒您复习")
+        self.destroy()
+
+    def calculate_next_review(self):
+        """计算下一次复习时间（基于SM-2算法简化版）"""
+        difficulty = self.difficulty_var.get()
+        
+        # 简单的间隔计算（实际应该基于SM-2算法）
+        intervals = {
+            "easy": timedelta(days=7),
+            "medium": timedelta(days=3),
+            "hard": timedelta(days=1),
+        }
+        
+        next_review = datetime.now() + intervals.get(difficulty, timedelta(days=3))
+        return next_review.strftime("%Y-%m-%d %H:%M")
+>>>>>>> ceab570 (feat: add ReviewDialog for knowledge review)
