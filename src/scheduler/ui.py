@@ -1,11 +1,3 @@
-<<<<<<< HEAD
-=======
-# -*- codeing =utf-8 -*-
-# @Time : 2025/11/18 13:44
-# @Author: Muncy
-# @File : ui.py.py
-# @Software: PyCharm
->>>>>>> 2942adbcb4ab1ce7c4645c5bd6cf2149eec1a1d1
 """
 复习调度界面 - 成员C实现
 """
@@ -204,9 +196,6 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
 
     def start_review(self, review: ReviewSchedule):
         """开始复习"""
-<<<<<<< HEAD
-        ReviewDialog(self, review, self.scheduler_service, self.db_manager, self.load_today_reviews)
-=======
         ReviewDialog(
             self,
             review,
@@ -214,7 +203,6 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
             self.db_manager,
             self.load_today_reviews,
         )
->>>>>>> 2942adbcb4ab1ce7c4645c5bd6cf2149eec1a1d1
 
 
 class ReviewDialog(ctk.CTkToplevel):
@@ -248,11 +236,7 @@ class ReviewDialog(ctk.CTkToplevel):
         height = self.winfo_height()
         x = (self.winfo_screenwidth() // 2) - (width // 2)
         y = (self.winfo_screenheight() // 2) - (height // 2)
-<<<<<<< HEAD
-        self.geometry(f'+{x}+{y}')
-=======
         self.geometry(f"+{x}+{y}")
->>>>>>> 2942adbcb4ab1ce7c4645c5bd6cf2149eec1a1d1
 
     def load_knowledge_item(self):
         """加载知识点内容"""
@@ -317,7 +301,9 @@ class ReviewDialog(ctk.CTkToplevel):
         evaluation_frame.pack(fill="x", pady=10)
 
         ctk.CTkLabel(
-            evaluation_frame, text="回忆程度评估:", font=ctk.CTkFont(size=14, weight="bold")
+            evaluation_frame,
+            text="回忆程度评估:",
+            font=ctk.CTkFont(size=14, weight="bold"),
         ).pack(anchor="w", pady=(10, 5))
 
         # 回忆程度滑块
@@ -367,7 +353,11 @@ class ReviewDialog(ctk.CTkToplevel):
 
         # 取消按钮
         cancel_btn = ctk.CTkButton(
-            button_frame, text="稍后复习", command=self.destroy, height=40, fg_color="gray"
+            button_frame,
+            text="稍后复习",
+            command=self.destroy,
+            height=40,
+            fg_color="gray",
         )
         cancel_btn.pack(side="right", padx=(10, 0), expand=True)
 
@@ -392,8 +382,4 @@ class ReviewDialog(ctk.CTkToplevel):
                 messagebox.showerror("错误", "复习完成失败")
 
         except Exception as e:
-<<<<<<< HEAD
             messagebox.showerror("错误", f"复习完成失败: {str(e)}")
-=======
-            messagebox.showerror("错误", f"复习完成失败: {str(e)}")
->>>>>>> 2942adbcb4ab1ce7c4645c5bd6cf2149eec1a1d1
