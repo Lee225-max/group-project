@@ -43,7 +43,7 @@ class KnowledgeService:
             items = (
                 session.query(KnowledgeItem)
                 .filter(
-                    KnowledgeItem.user_id == user_id, KnowledgeItem.is_active == True
+                    KnowledgeItem.user_id == user_id, KnowledgeItem.is_active is True
                 )
                 .order_by(KnowledgeItem.created_at.desc())
                 .all()
@@ -103,7 +103,7 @@ class KnowledgeService:
                 session.query(KnowledgeItem)
                 .filter(
                     KnowledgeItem.user_id == user_id,
-                    KnowledgeItem.is_active == True,
+                    KnowledgeItem.is_active is True,
                     KnowledgeItem.title.ilike(f"%{search_term}%"),
                 )
                 .order_by(KnowledgeItem.created_at.desc())
