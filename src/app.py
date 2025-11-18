@@ -120,16 +120,20 @@ class ReviewAlarmApp:
         )
         placeholder.pack(expand=True)
 
+    # 新更新的地方
     def show_today_review(self):
         """显示今日复习界面"""
         self.clear_content_frame()
 
-        placeholder = ctk.CTkLabel(
+        # 集成成员C的模块
+        from scheduler.ui import ReviewSchedulerFrame
+        review_frame = ReviewSchedulerFrame(
             self.content_frame,
-            text="今日复习界面\n(成员C开发)",
-            font=ctk.CTkFont(size=20, weight="bold"),
+            self.current_user,
+            self.db_manager
         )
-        placeholder.pack(expand=True)
+        review_frame.pack(fill="both", expand=True)
+#
 
     def show_analytics(self):
         """显示统计分析界面"""
@@ -176,3 +180,5 @@ class ReviewAlarmApp:
     def run(self):
         """运行应用"""
         self.root.mainloop()
+
+
