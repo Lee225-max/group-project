@@ -6,9 +6,23 @@ import customtkinter as ctk
 
 # 使用绝对导入
 from src.database.manager import DatabaseManager
-from src.auth.ui import LoginFrame  # 修复这行导入
-# 集成成员C的模块
-from src.scheduler.ui import ReviewSchedulerFrame  # 修复这行导入
+from src.auth.ui import LoginFrame  
+
+
+try:
+    from src.knowledge.ui import KnowledgeManagementFrame  # 添加 src. 前缀
+    KNOWLEDGE_MODULE_AVAILABLE = True
+except ImportError as e:
+    KNOWLEDGE_MODULE_AVAILABLE = False
+    print(f"⚠️ 知识管理模块导入失败，将使用占位符: {e} - app.py:17")
+
+# 2. 为复习调度模块添加了异常处理
+try:
+    from src.scheduler.ui import ReviewSchedulerFrame
+    SCHEDULER_MODULE_AVAILABLE = True
+except ImportError as e:
+    SCHEDULER_MODULE_AVAILABLE = False
+    print(f"⚠️ 复习调度模块导入失败，将使用占位符: {e} - app.py:25")
 
 
 class ReviewAlarmApp:
@@ -46,14 +60,12 @@ class ReviewAlarmApp:
         # 显示登录界面
         self.show_login()
 
-    def show_login(self):
-        """显示登录界面"""
-        # 删除这里的重复导入，因为已经在文件顶部导入了
+    def show_login(self):        
         self.clear_main_container()
 
         self.login_frame = LoginFrame(
             self.main_container,
-            db_manager=self.db_manager,  # 直接传递 db_manager
+            db_manager=self.db_manager,
             login_callback=self.on_login_success,
         )
         self.login_frame.pack(fill="both", expand=True)
@@ -114,25 +126,51 @@ class ReviewAlarmApp:
         """显示知识管理界面"""
         self.clear_content_frame()
 
+        # 3. 更新知识管理界面：将占位符替换为实际的 KnowledgeManagementFrame
+        if KNOWLEDGE_MODULE_AVAILABLE:
+            try:
+                knowledge_frame = KnowledgeManagementFrame(
+                    self.content_frame,
+                    self.current_user,
+                    self.db_manager
+                )
+                knowledge_frame.pack(fill="both", expand=True)
+                return
+            except Exception as e:
+                print(f"❌ 知识管理界面初始化失败: {e} - app.py:140")
+
+        # 备用：显示占位符
         placeholder = ctk.CTkLabel(
             self.content_frame,
-            text="知识管理界面\n(成员B开发)",
+            text="知识管理界面\n(模块加载失败)",
             font=ctk.CTkFont(size=20, weight="bold"),
         )
         placeholder.pack(expand=True)
-
-    # 新更新的地方
+        
     def show_today_review(self):
         """显示今日复习界面"""
-        self.clear_content_frame()
-        
-        review_frame = ReviewSchedulerFrame(
+        self.clear_content_frame()    
+
+        # 4. 添加错误处理：防止模块未完成时程序崩溃
+        if SCHEDULER_MODULE_AVAILABLE:
+            try:
+                review_frame = ReviewSchedulerFrame(
+                    self.content_frame, 
+                    self.current_user, 
+                    self.db_manager
+                )
+                review_frame.pack(fill="both", expand=True)
+                return
+            except Exception as e:
+                print(f"❌ 复习调度界面初始化失败: {e} - app.py:165")
+
+        # 备用：显示占位符
+        placeholder = ctk.CTkLabel(
             self.content_frame,
-            self.current_user,
-            self.db_manager
+            text="今日复习界面\n(成员C开发中...)",
+            font=ctk.CTkFont(size=20, weight="bold"),
         )
-        review_frame.pack(fill="both", expand=True)
-#
+        placeholder.pack(expand=True)
 
     def show_analytics(self):
         """显示统计分析界面"""
@@ -179,3 +217,8 @@ class ReviewAlarmApp:
     def run(self):
         """运行应用"""
         self.root.mainloop()
+
+
+if __name__ == "__main__":
+    app = ReviewAlarmApp()
+    app.run()
