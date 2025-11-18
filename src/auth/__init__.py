@@ -5,4 +5,4 @@
 from .ui import LoginFrame, RegisterDialog
 from .service import AuthService
 
-__all__ = ['LoginFrame', 'RegisterDialog', 'AuthService']
+__all__ = ["LoginFrame", "RegisterDialog", "AuthService"]

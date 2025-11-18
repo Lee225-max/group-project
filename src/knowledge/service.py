@@ -9,11 +9,13 @@ from src.database.models import KnowledgeItem
 
 class KnowledgeService:
     """知识管理服务"""
-    
+
     def __init__(self, db_manager: DatabaseManager):
         self.db_manager = db_manager
-    
-    def add_knowledge_item(self, user_id: int, title: str, content: str, category: str = None):
+
+    def add_knowledge_item(
+        self, user_id: int, title: str, content: str, category: str = None
+    ):
         """添加知识点"""
         session = self.db_manager.get_session()
         try:
@@ -22,7 +24,7 @@ class KnowledgeService:
                 title=title,
                 content=content,
                 category=category,
-                created_at=datetime.now()
+                created_at=datetime.now(),
             )
             session.add(item)
             session.commit()
@@ -33,24 +35,32 @@ class KnowledgeService:
             raise e
         finally:
             session.close()
-    
+
     def get_user_knowledge_items(self, user_id: int):
         """获取用户的所有知识点"""
         session = self.db_manager.get_session()
         try:
-            items = session.query(KnowledgeItem).filter(
-                KnowledgeItem.user_id == user_id,
-                KnowledgeItem.is_active == True
-            ).order_by(KnowledgeItem.created_at.desc()).all()
+            items = (
+                session.query(KnowledgeItem)
+                .filter(
+                    KnowledgeItem.user_id == user_id, KnowledgeItem.is_active == True
+                )
+                .order_by(KnowledgeItem.created_at.desc())
+                .all()
+            )
             return items
         finally:
             session.close()
-    
-    def update_knowledge_item(self, item_id: int, title: str = None, content: str = None, category: str = None):
+
+    def update_knowledge_item(
+        self, item_id: int, title: str = None, content: str = None, category: str = None
+    ):
         """更新知识点"""
         session = self.db_manager.get_session()
         try:
-            item = session.query(KnowledgeItem).filter(KnowledgeItem.id == item_id).first()
+            item = (
+                session.query(KnowledgeItem).filter(KnowledgeItem.id == item_id).first()
+            )
             if item:
                 if title is not None:
                     item.title = title
@@ -66,12 +76,14 @@ class KnowledgeService:
             raise e
         finally:
             session.close()
-    
+
     def delete_knowledge_item(self, item_id: int):
         """删除知识点（软删除）"""
         session = self.db_manager.get_session()
         try:
-            item = session.query(KnowledgeItem).filter(KnowledgeItem.id == item_id).first()
+            item = (
+                session.query(KnowledgeItem).filter(KnowledgeItem.id == item_id).first()
+            )
             if item:
                 item.is_active = False
                 session.commit()
@@ -82,16 +94,21 @@ class KnowledgeService:
             raise e
         finally:
             session.close()
-    
+
     def search_knowledge_items(self, user_id: int, search_term: str):
         """搜索知识点"""
         session = self.db_manager.get_session()
         try:
-            items = session.query(KnowledgeItem).filter(
-                KnowledgeItem.user_id == user_id,
-                KnowledgeItem.is_active == True,
-                KnowledgeItem.title.ilike(f"%{search_term}%")
-            ).order_by(KnowledgeItem.created_at.desc()).all()
+            items = (
+                session.query(KnowledgeItem)
+                .filter(
+                    KnowledgeItem.user_id == user_id,
+                    KnowledgeItem.is_active == True,
+                    KnowledgeItem.title.ilike(f"%{search_term}%"),
+                )
+                .order_by(KnowledgeItem.created_at.desc())
+                .all()
+            )
             return items
         finally:
             session.close()
