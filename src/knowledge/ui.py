@@ -4,7 +4,7 @@
 
 import customtkinter as ctk
 from tkinter import messagebox
-from .service import KnowledgeService
+from src.knowledge.service import KnowledgeService
 
 
 class KnowledgeManagementFrame(ctk.CTkFrame):
@@ -183,11 +183,15 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         KnowledgeItemDetailDialog(self, item)
 
     def review_item(self, item):
-        """复习知识点"""
+    """复习知识点"""
+    try:
         from src.scheduler.ui import ReviewDialog
-
         ReviewDialog(self, item, self.current_user, self.knowledge_service.db_manager)
-
+    except ImportError:
+        messagebox.showinfo("提示", "复习模块尚未实现")
+    except Exception as e:
+        messagebox.showerror("错误", f"打开复习对话框失败: {str(e)}")
+        
     def on_search(self, event=None):
         """搜索功能"""
         search_term = self.search_entry.get().strip()
