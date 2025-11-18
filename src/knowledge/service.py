@@ -1,5 +1,5 @@
-# src/knowledge/service.py
 from src.database.models import KnowledgeItem
+
 
 class KnowledgeService:
     def __init__(self, db_manager):
@@ -11,10 +11,10 @@ class KnowledgeService:
         try:
             print(f"🔍 在数据库中搜索: '{search_term}' - service.py:12")
             
-            # 构建查询
+            # 构建查询：修复 E712 错误（将 is True 改为直接判断）
             query = session.query(KnowledgeItem).filter(
                 KnowledgeItem.user_id == user_id,
-                KnowledgeItem.is_active is True
+                KnowledgeItem.is_active  # 原错误：KnowledgeItem.is_active is True
             )
             
             # 添加搜索条件
@@ -39,14 +39,15 @@ class KnowledgeService:
         """获取用户的知识点列表"""
         session = self.db_manager.get_session()
         try:
+            # 修复 E712 错误（将 is True 改为直接判断）
             items = session.query(KnowledgeItem).filter(
                 KnowledgeItem.user_id == user_id,
-                KnowledgeItem.is_active is True
+                KnowledgeItem.is_active  # 原错误：KnowledgeItem.is_active is True
             ).order_by(KnowledgeItem.created_at.desc()).all()
-            print(f"📝 获取到 {len(items)} 个知识点 - service.py:46")
+            print(f"📝 获取到 {len(items)} 个知识点 - service.py:47")
             return items
         except Exception as e:
-            print(f"❌ 获取知识点列表出错: {e} - service.py:49")
+            print(f"❌ 获取知识点列表出错: {e} - service.py:50")
             return []
         finally:
             session.close()
@@ -65,11 +66,11 @@ class KnowledgeService:
             session.add(knowledge_item)
             session.commit()
             session.refresh(knowledge_item)
-            print(f"✅ 添加知识点成功: {title} - service.py:68")
+            print(f"✅ 添加知识点成功: {title} - service.py:69")
             return knowledge_item
         except Exception as e:
             session.rollback()
-            print(f"❌ 添加知识点失败: {e} - service.py:72")
+            print(f"❌ 添加知识点失败: {e} - service.py:73")
             raise e
         finally:
             session.close()
@@ -90,11 +91,11 @@ class KnowledgeService:
                 item.category = category
                 
             session.commit()
-            print(f"✅ 更新知识点成功: {item.title} - service.py:93")
+            print(f"✅ 更新知识点成功: {item.title} - service.py:94")
             return item
         except Exception as e:
             session.rollback()
-            print(f"❌ 更新知识点失败: {e} - service.py:97")
+            print(f"❌ 更新知识点失败: {e} - service.py:98")
             raise e
         finally:
             session.close()
@@ -108,12 +109,12 @@ class KnowledgeService:
                 # 软删除
                 item.is_active = False
                 session.commit()
-                print(f"✅ 删除知识点成功: {item.title} - service.py:111")
+                print(f"✅ 删除知识点成功: {item.title} - service.py:112")
                 return True
             return False
         except Exception as e:
             session.rollback()
-            print(f"❌ 删除知识点失败: {e} - service.py:116")
+            print(f"❌ 删除知识点失败: {e} - service.py:117")
             raise e
         finally:
             session.close()
