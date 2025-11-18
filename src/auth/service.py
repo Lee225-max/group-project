@@ -4,8 +4,8 @@
 
 import bcrypt
 
-# 使用相对导入
-from database.manager import DatabaseManager
+from src.database.manager import DatabaseManager
+from src.database.models import User
 
 
 class AuthService:
@@ -16,7 +16,6 @@ class AuthService:
 
     def register_user(self, username: str, email: str, password: str):
         """注册用户"""
-        from database.models import User
 
         # 检查用户名是否已存在
         session = self.db_manager.get_session()
@@ -41,7 +40,6 @@ class AuthService:
 
     def authenticate_user(self, username: str, password: str):
         """用户认证"""
-        from database.models import User
 
         session = self.db_manager.get_session()
         user = session.query(User).filter(User.username == username).first()
