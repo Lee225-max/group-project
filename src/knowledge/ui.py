@@ -231,7 +231,9 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
 
 
 class KnowledgeItemDialog(ctk.CTkToplevel):
-    """知识点编辑对话框"""
+    """知识点    知识点编辑对话框
+    修复 F841 错误：移除未使用的 result 变量
+    """
 
     def __init__(self, parent, user, knowledge_service, callback, item=None):
         super().__init__(parent)
@@ -305,14 +307,14 @@ class KnowledgeItemDialog(ctk.CTkToplevel):
 
         try:
             if self.item:
-                # 更新现有项,暂时可以用 _ 占位：
-                _ = self.knowledge_service.update_knowledge_item(
+                # 修复 F841：直接调用方法，不保留未使用的返回值
+                self.knowledge_service.update_knowledge_item(
                     self.item.id, title=title, category=category, content=content
                 )
                 print(f"✅ 知识点更新成功: {title} - ui.py:312")
             else:
-                # 创建新项,暂时可以用 _ 占位：
-                _ = self.knowledge_service.add_knowledge_item(
+                # 修复 F841：直接调用方法，不保留未使用的返回值
+                self.knowledge_service.add_knowledge_item(
                     self.user.id, title, content, category
                 )
                 print(f"✅ 知识点创建成功: {title} - ui.py:318")
