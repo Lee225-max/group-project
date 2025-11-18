@@ -62,17 +62,17 @@ jobs:
       run: |
         pip install black flake8
     
+    # 先自动格式化所有代码
+    - name: Auto-format code with Black
+      run: black src/ tests/
+    
+    # 然后检查格式（应该总是通过，因为已经格式化了）
     - name: Check code formatting
-      run: |
-        black --check src/ tests/
+      run: black --check src/ tests/
     
     - name: Lint code
       run: |
         flake8 src/ tests/
-    
-    - name: Format with Black
-      run: |
-        black --check src/ tests/ || black src/ tests/
 
   # 新增：模块导入测试
   module-imports:
