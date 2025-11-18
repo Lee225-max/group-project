@@ -12,31 +12,33 @@ jobs:
     strategy:
       matrix:
         python-version: ['3.9']
-# 下面是要添加的steps部分
     steps:
-# 步骤1：检出代码到CI环境
+    # 步骤1：检出代码到CI环境
     - uses: actions/checkout@v4
-# 步骤2：配置Python环境
+    
+    # 步骤2：配置Python环境
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
-# 步骤3：安装项目依赖（包括black格式化工具）
+    
+    # 步骤3：安装项目依赖（包括black格式化工具）
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        #新增black
-        pip install black
-# 步骤4：自动格式化代码（解决格式不规范的问题）
+        # 新增black和pytest
+        pip install black pytest pytest-cov
+    
+    # 步骤4：自动格式化代码（解决格式不规范的问题）
     - name: Auto-format code with Black
       run: black src/ tests/
-# 步骤5：检查代码格式（现在格式化后再检查，就会通过）
+    
+    # 步骤5：检查代码格式（现在格式化后再检查，就会通过）
     - name: Check code format with Black
       run: black --check src/ tests/
-
-
- #原本就有的步骤
+    
+    # 原本就有的步骤
     - name: Run tests
       run: |
         pytest tests/ --cov=src --cov-report=xml
@@ -52,7 +54,7 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Set up Python
-      uses: actions/setup-python@v4  # 修复：应该是 setup-python，不是 sup-python
+      uses: actions/setup-python@v4
       with:
         python-version: "3.9"
     
@@ -67,6 +69,7 @@ jobs:
     - name: Lint code
       run: |
         flake8 src/ tests/
+    
     - name: Format with Black
       run: |
         black --check src/ tests/ || black src/ tests/
@@ -91,4 +94,8 @@ jobs:
     - name: Test module imports
       run: |
         echo "🔍 测试模块导入..."
-        
+        python -c "from src.auth.service import AuthService; print('✓ AuthService 导入成功')"
+        python -c "from src.database.manager import DatabaseManager; print('✓ DatabaseManager 导入成功')"
+        python -c "from src.knowledge.service import KnowledgeService; print('✓ KnowledgeService 导入成功')"
+        python -c "from src.scheduler.service import SchedulerService; print('✓ SchedulerService 导入成功')"
+        echo "✅ 所有模块导入测试通过！"
