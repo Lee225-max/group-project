@@ -305,14 +305,14 @@ class KnowledgeItemDialog(ctk.CTkToplevel):
 
         try:
             if self.item:
-                # 更新现有项
-                result = self.knowledge_service.update_knowledge_item(
+                # 更新现有项,暂时可以用 _ 占位：
+                _ = self.knowledge_service.update_knowledge_item(
                     self.item.id, title=title, category=category, content=content
                 )
                 print(f"✅ 知识点更新成功: {title} - ui.py:312")
             else:
-                # 创建新项
-                result = self.knowledge_service.add_knowledge_item(
+                # 创建新项,暂时可以用 _ 占位：
+                _ = self.knowledge_service.add_knowledge_item(
                     self.user.id, title, content, category
                 )
                 print(f"✅ 知识点创建成功: {title} - ui.py:318")

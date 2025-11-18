@@ -14,7 +14,7 @@ class KnowledgeService:
             # 构建查询
             query = session.query(KnowledgeItem).filter(
                 KnowledgeItem.user_id == user_id,
-                KnowledgeItem.is_active == True
+                KnowledgeItem.is_active is True
             )
             
             # 添加搜索条件
@@ -41,7 +41,7 @@ class KnowledgeService:
         try:
             items = session.query(KnowledgeItem).filter(
                 KnowledgeItem.user_id == user_id,
-                KnowledgeItem.is_active == True
+                KnowledgeItem.is_active is True
             ).order_by(KnowledgeItem.created_at.desc()).all()
             print(f"📝 获取到 {len(items)} 个知识点 - service.py:46")
             return items
