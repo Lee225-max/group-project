@@ -30,10 +30,10 @@ jobs:
         pip install black
 # 步骤4：自动格式化代码（解决格式不规范的问题）
     - name: Auto-format code with Black
-        run: black src/ tests/
+      run: black src/ tests/
 # 步骤5：检查代码格式（现在格式化后再检查，就会通过）
-      - name: Check code format with Black
-        run: black --check src/ tests/
+    - name: Check code format with Black
+      run: black --check src/ tests/
 
 
  #原本就有的步骤
