@@ -109,7 +109,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             # 取消筛选
             self.show_only_today = False
             self.filter_today_btn.configure(
-                text="筛选今日复习", 
+                text="筛选今日复习",
                 fg_color="#4ECDC4",
                 hover_color="#45B7B0"
             )
@@ -118,20 +118,21 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             # 应用筛选
             self.show_only_today = True
             self.filter_today_btn.configure(
-                text="取消筛选", 
+                text="取消筛选",
                 fg_color="#FF6B6B",
                 hover_color="#FF5252"
             )
             self.today_review_label.configure(text="正在显示今日复习")
-        
+
         self.load_knowledge_items()
 
     def update_today_review_count(self):
         """更新今日复习计数"""
         try:
             today_count = self.db_manager.get_today_review_count(self.current_user.id)
-            overdue_count = self.db_manager.get_overdue_reviews_count(self.current_user.id)
-            
+            overdue_count = self.db_manager.get_overdue_reviews_count(
+                self.current_user.id)
+
             if overdue_count > 0:
                 self.today_review_label.configure(
                     text=f"今日需复习：{today_count}项（{overdue_count}项逾期）",
@@ -164,10 +165,11 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             except Exception as e:
                 print(f"❌ 获取知识点失败: {e}，回退到基本方法 - ui.py:165")
                 # 回退到基本方法
-                items = self.knowledge_service.get_user_knowledge_items(self.current_user.id)
+                items = self.knowledge_service.get_user_knowledge_items(
+                    self.current_user.id)
                 # 将数据库对象转换为字典格式
                 items = [self._convert_to_dict(item) for item in items]
-        
+
         # 应用今日复习筛选
         if self.show_only_today:
             items = [item for item in items if item.get('is_today_review', False)]
@@ -185,7 +187,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             empty_text = "暂无知识点，点击\"添加知识点\"开始创建"
             if self.show_only_today:
                 empty_text = "今日暂无复习计划\n所有知识点都已复习完成！🎉"
-            
+
             empty_label = ctk.CTkLabel(
                 self.scrollable_frame,
                 text=empty_text,
@@ -210,12 +212,11 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
 
     def _convert_to_dict(self, item):
         """将数据库对象转换为字典格式"""
-        from datetime import datetime
-        
+
         if hasattr(item, 'get'):
             # 已经是字典，直接返回
             return item
-        
+
         # 从数据库对象转换为字典
         result = {
             'id': getattr(item, 'id', ''),
@@ -226,18 +227,18 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             'review_status': '⏳ 状态未知',
             'is_today_review': False
         }
-        
+
         # 处理日期格式
         if hasattr(item, 'created_at') and hasattr(item.created_at, 'strftime'):
             result['created_at'] = item.created_at.strftime("%Y-%m-%d")
-        
+
         return result
 
     def create_item_row(self, item):
         """创建知识项行 - 支持今日复习样式"""
         # 确保使用字典访问方式
         item = self._ensure_dict_format(item)
-        
+
         row = ctk.CTkFrame(self.scrollable_frame)
         row.pack(fill="x", padx=5, pady=2)
 
@@ -260,7 +261,9 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             )
             icon_label.pack(side="left")
 
-        title_label = ctk.CTkLabel(title_frame, text=item.get('title', '无标题'), anchor="w")
+        title_label = ctk.CTkLabel(
+            title_frame, text=item.get(
+                'title', '无标题'), anchor="w")
         title_label.pack(side="left", fill="x", expand=True)
         title_label.bind("<Button-1>", lambda e, item=item: self.view_item_detail(item))
 
@@ -272,9 +275,9 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
 
         # 复习状态
         status_label = ctk.CTkLabel(
-            row, 
-            text=item.get('review_status', '未知状态'), 
-            width=150, 
+            row,
+            text=item.get('review_status', '未知状态'),
+            width=150,
             anchor="w",
             text_color="#4ECDC4" if is_today_review else "#888888"
         )
@@ -340,17 +343,21 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         try:
             item = self._ensure_dict_format(item)
             print(f"📅 将知识点 '{item.get('title', '无标题')}' 加入今日复习 - ui.py:342")
-            
+
             # 调用数据库管理器的方法
-            result = self.db_manager.add_to_today_review(item['id'], self.current_user.id)
-            
+            result = self.db_manager.add_to_today_review(
+                item['id'], self.current_user.id)
+
             if result["success"]:
-                messagebox.showinfo("成功", f"已将知识点 '{item.get('title', '无标题')}' 加入今日复习计划")
+                messagebox.showinfo(
+                    "成功", f"已将知识点 '{
+                        item.get(
+                            'title', '无标题')}' 加入今日复习计划")
                 # 刷新列表
                 self.load_knowledge_items()
             else:
                 messagebox.showerror("错误", result["msg"])
-                
+
         except Exception as e:
             print(f"❌ 加入今日复习失败: {e} - ui.py:355")
             messagebox.showerror("错误", f"加入今日复习失败: {e}")
@@ -372,7 +379,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         item = self._ensure_dict_format(item)
         print(f"✏️ 打开编辑知识点对话框: {item.get('title', '无标题')} - ui.py:373")
         print(f"回调函数: {self.load_knowledge_items} - ui.py:374")
-        
+
         # 需要将字典项转换为适当的对象格式
         class AdaptedItem:
             def __init__(self, item_dict):
@@ -381,7 +388,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
                 self.content = item_dict.get('content', '')
                 self.category = item_dict.get('category')
                 self.created_at = item_dict.get('created_at')
-        
+
         adapted_item = AdaptedItem(item)
         KnowledgeItemDialog(
             self,
@@ -413,7 +420,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             item = self._ensure_dict_format(item)
             print(f"🔍 调试  知识点对象类型: {type(item)} - ui.py:414")
             print(f"🔍 调试  知识点ID: {item.get('id', 'No id attribute')} - ui.py:415")
-            
+
             # 创建一个适配器对象
             class AdaptedItem:
                 def __init__(self, item_dict):
@@ -424,13 +431,13 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
                     # 复制所有其他属性
                     for key, value in item_dict.items():
                         setattr(self, key, value)
-            
+
             adapted_item = AdaptedItem(item)
 
             ReviewDialog(
-                self, 
-                adapted_item, 
-                self.current_user, 
+                self,
+                adapted_item,
+                self.current_user,
                 self.knowledge_service.db_manager,
                 refresh_callback=self.load_knowledge_items
             )
@@ -453,14 +460,16 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
                     self.current_user.id, search_term
                 )
                 print(f"📊 搜索返回 {len(items)} 个结果 - ui.py:455")
-                
+
                 # 将搜索结果转换为字典格式
                 items = [self._convert_to_dict(item) for item in items]
-                
+
                 # 应用今日复习筛选（如果启用）
                 if self.show_only_today:
-                    items = [item for item in items if item.get('is_today_review', False)]
-                
+                    items = [
+                        item for item in items if item.get(
+                            'is_today_review', False)]
+
                 self.load_knowledge_items(items)
             else:
                 print("🔄 搜索词为空，显示所有知识点 - ui.py:466")

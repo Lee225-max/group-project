@@ -25,15 +25,15 @@ class AuthService:
     def register_user(self, username: str, email: str, password: str) -> User:
         """
         注册新用户
-        
+
         Args:
             username: 用户名
             email: 邮箱地址
             password: 原始密码
-            
+
         Returns:
             注册成功的用户对象
-            
+
         Raises:
             ValueError: 当输入无效或用户已存在时
             Exception: 数据库操作失败时
@@ -41,10 +41,10 @@ class AuthService:
         # 输入验证
         if not username or len(username) < 3:
             raise ValueError("用户名长度至少为3个字符")
-        
+
         if not self._validate_email(email):
             raise ValueError("请输入有效的邮箱地址")
-        
+
         if not password or len(password) < 6:
             raise ValueError("密码长度至少为6个字符")
 
@@ -78,17 +78,17 @@ class AuthService:
             session.add(user)
             session.commit()
             session.refresh(user)  # 获取数据库生成的ID等信息
-            
+
             return user
 
     def authenticate_user(self, username: str, password: str) -> Optional[User]:
         """
         验证用户身份
-        
+
         Args:
             username: 用户名
             password: 密码
-            
+
         Returns:
             验证成功返回用户对象，失败返回None
         """
@@ -106,16 +106,16 @@ class AuthService:
             user.password_hash.encode("utf-8")
         ):
             return user
-            
+
         return None
 
     def get_user_by_id(self, user_id: int) -> Optional[User]:
         """
         通过用户ID获取用户信息
-        
+
         Args:
             user_id: 用户ID
-            
+
         Returns:
             用户对象或None
         """

@@ -9,7 +9,7 @@ from .ui import ReviewSchedulerFrame, ReviewDialog
 
 __all__ = [
     # "EbbinghausScheduler",
-    "SchedulerService", 
+    "SchedulerService",
     "ReviewSchedulerFrame",
     "ReviewDialog",
 ]

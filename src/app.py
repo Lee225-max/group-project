@@ -7,7 +7,7 @@ import customtkinter as ctk
 
 # 使用相对导入
 from database.manager import DatabaseManager
-from auth.ui import LoginFrame  
+from auth.ui import LoginFrame
 
 try:
     from .knowledge.ui import KnowledgeManagementFrame
@@ -59,7 +59,7 @@ class ReviewAlarmApp:
         # 显示登录界面
         self.show_login()
 
-    def show_login(self):        
+    def show_login(self):
         self.clear_main_container()
 
         self.login_frame = LoginFrame(
@@ -144,7 +144,7 @@ class ReviewAlarmApp:
             font=ctk.CTkFont(size=20, weight="bold"),
         )
         placeholder.pack(expand=True)
-        
+
     def show_today_review(self):
         """显示今日复习界面"""
         print("🔄 切换到今日复习界面 - app.py:150")
@@ -154,8 +154,8 @@ class ReviewAlarmApp:
             try:
                 print("🎯 正在创建今日复习界面... - app.py:155")
                 review_frame = ReviewSchedulerFrame(
-                    self.content_frame, 
-                    self.current_user, 
+                    self.content_frame,
+                    self.current_user,
                     self.db_manager
                 )
                 review_frame.pack(fill="both", expand=True)
@@ -174,7 +174,7 @@ class ReviewAlarmApp:
         )
         placeholder.pack(expand=True)
         print("⚠️ 使用今日复习界面占位符 - app.py:176")
- 
+
     def show_analytics(self):
         """显示统计分析界面"""
         self.clear_content_frame()

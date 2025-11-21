@@ -3,7 +3,6 @@ from src.database.manager import DatabaseManager
 import smtplib
 from email.mime.text import MIMEText
 from plyer import notification
-from datetime import datetime
 import threading
 import time
 

@@ -15,10 +15,10 @@ class EbbinghausStatsService:
 
     def generate_full_report(self, user_id):
         """生成完整统计报告（文字+图表）"""
-        print("= - stats.py:18"*50)
+        print("= - stats.py:18" * 50)
         print(f"📊 艾宾浩斯复习统计报告（用户ID：{user_id}） - stats.py:19")
         print(f"生成时间：{datetime.now().strftime('%Y%m%d %H:%M:%S')} - stats.py:20")
-        print("= - stats.py:21"*50)
+        print("= - stats.py:21" * 50)
 
         # 1. 整体概览
         overall = self.db_manager.get_overall_stats(user_id)
@@ -44,10 +44,11 @@ class EbbinghausStatsService:
         daily_stats = self.db_manager.get_daily_review_stats(user_id, days=7)
         print("\n【近7天复习效果】 - stats.py:45")
         for day in daily_stats:
-            print(f"{day['date']}：平均回忆分 {day['avg_recall_score']}，复习 {day['review_count']} 次 - stats.py:47")
+            print(
+                f"{day['date']}：平均回忆分 {day['avg_recall_score']}，复习 {day['review_count']} 次 - stats.py:47")
         self._plot_daily_trend(daily_stats)
 
-        print("\n - stats.py:50" + "="*50)
+        print("\n - stats.py:50" + "=" * 50)
 
     def _plot_stage_pie(self, stage_stats):
         """绘制各阶段知识点分布饼图"""
@@ -55,7 +56,7 @@ class EbbinghausStatsService:
             print("⚠️  暂无未完成的复习计划，无法生成阶段分布图表 - stats.py:55")
             return
 
-        labels = [f"第{stage+1}阶段" for stage in stage_stats.keys()]
+        labels = [f"第{stage + 1}阶段" for stage in stage_stats.keys()]
         sizes = list(stage_stats.values())
         colors = plt.cm.Set3(np.linspace(0, 1, len(labels)))
 
@@ -75,14 +76,21 @@ class EbbinghausStatsService:
             print("⚠️  近7天无复习记录，无法生成趋势图表 - stats.py:75")
             return
 
-        dates = [datetime.strptime(day["date"], "%Y-%m-%d").date() for day in daily_stats]
+        dates = [datetime.strptime(day["date"], "%Y-%m-%d").date()
+                 for day in daily_stats]
         avg_scores = [day["avg_recall_score"] for day in daily_stats]
         review_counts = [day["review_count"] for day in daily_stats]
 
         # 创建双轴图
-        fig, ax1 = plt.figure(figsize=(10, 5)), plt.subplot(111)
+        fig, ax1 = plt.subplots(figsize=(10, 5))
         # 回忆分数（左轴）
-        ax1.plot(dates, avg_scores, marker="o", color="#2E86AB", linewidth=2, label="平均回忆分数")
+        ax1.plot(
+            dates,
+            avg_scores,
+            marker="o",
+            color="#2E86AB",
+            linewidth=2,
+            label="平均回忆分数")
         ax1.set_xlabel("日期", fontsize=12)
         ax1.set_ylabel("平均回忆分数（0-100）", fontsize=12, color="#2E86AB")
         ax1.tick_params(axis="y", labelcolor="#2E86AB")

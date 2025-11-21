@@ -30,7 +30,10 @@ class User(Base):
     reminder_channel = Column(String(20), default="app")  # app/email
 
     # 关联复习计划
-    review_schedules = relationship("ReviewSchedule", backref="user", cascade="all, delete-orphan")
+    review_schedules = relationship(
+        "ReviewSchedule",
+        backref="user",
+        cascade="all, delete-orphan")
 
 
 class KnowledgeItem(Base):
@@ -48,14 +51,23 @@ class KnowledgeItem(Base):
     initial_interval_unit = Column(Enum(IntervalUnit), default=IntervalUnit.DAY)
 
     # 关联复习计划和记录
-    review_schedules = relationship("ReviewSchedule", backref="knowledge_item", cascade="all, delete-orphan")
-    review_records = relationship("ReviewRecord", backref="knowledge_item", cascade="all, delete-orphan")
+    review_schedules = relationship(
+        "ReviewSchedule",
+        backref="knowledge_item",
+        cascade="all, delete-orphan")
+    review_records = relationship(
+        "ReviewRecord",
+        backref="knowledge_item",
+        cascade="all, delete-orphan")
 
 
 class ReviewSchedule(Base):
     __tablename__ = "review_schedules"
     id = Column(Integer, primary_key=True)
-    knowledge_item_id = Column(Integer, ForeignKey("knowledge_items.id"), nullable=False)
+    knowledge_item_id = Column(
+        Integer,
+        ForeignKey("knowledge_items.id"),
+        nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     scheduled_date = Column(DateTime, nullable=False)
     completed = Column(Boolean, default=False)
@@ -71,7 +83,10 @@ class ReviewSchedule(Base):
 class ReviewRecord(Base):
     __tablename__ = "review_records"
     id = Column(Integer, primary_key=True)
-    knowledge_item_id = Column(Integer, ForeignKey("knowledge_items.id"), nullable=False)
+    knowledge_item_id = Column(
+        Integer,
+        ForeignKey("knowledge_items.id"),
+        nullable=False)
     schedule_id = Column(Integer, ForeignKey("review_schedules.id"))
     review_date = Column(DateTime, default=datetime.now)
     effectiveness = Column(Integer, nullable=False)  # 1-5分
