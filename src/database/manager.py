@@ -64,12 +64,9 @@ class DatabaseManager:
                 current_interval_unit=IntervalUnit.HOUR
             )
             session.add(first_schedule)
-            print(
-                f"📅 [ADD DEBUG] 复习计划创建: 知识点ID={
-                    item.id}, 时间={scheduled_date}")
-
+            print(f"📅 [ADD DEBUG] 复习计划创建: 知识点ID={item.id}, 时间={scheduled_date} - manager.py:67")
             session.commit()
-            print("✅ [ADD DEBUG] 数据库提交成功 - manager.py:72")
+            print("✅ [ADD DEBUG] 数据库提交成功 - manager.py:69")
 
             return {
                 "success": True,
@@ -77,7 +74,7 @@ class DatabaseManager:
                     "knowledge_id": item.id,
                     "first_schedule_id": first_schedule.id}}
         except Exception as e:
-            print(f"❌ [ADD DEBUG] 添加失败: {str(e)} - manager.py:80")
+            print(f"❌ [ADD DEBUG] 添加失败: {str(e)} - manager.py:77")
             session.rollback()
             return {"success": False, "msg": f"新增失败：{str(e)}"}
         finally:
@@ -87,31 +84,31 @@ class DatabaseManager:
         """获取用户所有知识点（含复习状态）"""
         session = self.get_session()
         try:
-            print(f"🔍 [DEBUG] 开始查询用户 {user_id} 的知识点 - manager.py:90")
+            print(f"🔍 [DEBUG] 开始查询用户 {user_id} 的知识点 - manager.py:87")
 
             knowledges = session.query(KnowledgeItem).filter(
                 KnowledgeItem.user_id == user_id,
                 KnowledgeItem.is_active
             ).order_by(KnowledgeItem.created_at.desc()).all()
 
-            print(f"🔍 [DEBUG] 数据库查询结果: {len(knowledges)} 个知识点 - manager.py:97")
+            print(f"🔍 [DEBUG] 数据库查询结果: {len(knowledges)} 个知识点 - manager.py:94")
 
             result = []
             today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
             today_end = today_start + timedelta(days=1)
 
-            print(f"🔍 [DEBUG] 今日时间范围: {today_start} 到 {today_end} - manager.py:103")
+            print(f"🔍 [DEBUG] 今日时间范围: {today_start} 到 {today_end} - manager.py:100")
 
             from src.scheduler.ebbinghaus_config import EbbinghausConfig
 
             for item in knowledges:
-                print(f"🔍 [DEBUG] 处理知识点: {item.title} (ID: {item.id}) - manager.py:108")
+                print(f"🔍 [DEBUG] 处理知识点: {item.title} (ID: {item.id}) - manager.py:105")
 
                 # 检查复习计划
                 schedules = session.query(ReviewSchedule).filter(
                     ReviewSchedule.knowledge_item_id == item.id
                 ).all()
-                print(f"关联的复习计划数量: {len(schedules)} - manager.py:114")
+                print(f"关联的复习计划数量: {len(schedules)} - manager.py:111")
 
                 for s in schedules:
                     print(
@@ -128,7 +125,7 @@ class DatabaseManager:
                     ReviewSchedule.scheduled_date < today_end
                 ).first()
 
-                print(f"今日复习计划: {today_schedule} - manager.py:131")
+                print(f"今日复习计划: {today_schedule} - manager.py:128")
 
                 # 检查是否完成所有阶段
                 last_schedule = session.query(ReviewSchedule).filter(
@@ -168,10 +165,10 @@ class DatabaseManager:
                     "is_today_review": True if today_schedule else False
                 })
 
-            print(f"🔍 [DEBUG] 最终返回 {len(result)} 个知识点 - manager.py:171")
+            print(f"🔍 [DEBUG] 最终返回 {len(result)} 个知识点 - manager.py:168")
             return result
         except Exception as e:
-            print(f"❌ [DEBUG] 查询出错: {e} - manager.py:174")
+            print(f"❌ [DEBUG] 查询出错: {e} - manager.py:171")
             raise
         finally:
             session.close()
@@ -186,7 +183,7 @@ class DatabaseManager:
             today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
             today_end = today_start + timedelta(days=1)
 
-            print(f"🔍 [TODAY DEBUG] 查询用户 {user_id} 的今日复习计划 - manager.py:189")
+            print(f"🔍 [TODAY DEBUG] 查询用户 {user_id} 的今日复习计划 - manager.py:186")
 
             schedules = session.query(ReviewSchedule, KnowledgeItem).join(
                 KnowledgeItem, ReviewSchedule.knowledge_item_id == KnowledgeItem.id
@@ -197,7 +194,7 @@ class DatabaseManager:
                 ReviewSchedule.scheduled_date < today_end
             ).order_by(ReviewSchedule.scheduled_date).all()
 
-            print(f"🔍 [TODAY DEBUG] 找到 {len(schedules)} 个今日复习计划 - manager.py:200")
+            print(f"🔍 [TODAY DEBUG] 找到 {len(schedules)} 个今日复习计划 - manager.py:197")
 
             result = []
             from src.scheduler.ebbinghaus_config import EbbinghausConfig
@@ -220,7 +217,7 @@ class DatabaseManager:
                 })
             return result
         except Exception as e:
-            print(f"❌ [TODAY DEBUG] 查询出错: {e} - manager.py:223")
+            print(f"❌ [TODAY DEBUG] 查询出错: {e} - manager.py:220")
             raise
         finally:
             session.close()
@@ -239,7 +236,7 @@ class DatabaseManager:
                 ReviewSchedule.scheduled_date < today_end
             ).count()
 
-            print(f"🔍 [COUNT DEBUG] 用户 {user_id} 今日复习数量: {count} - manager.py:242")
+            print(f"🔍 [COUNT DEBUG] 用户 {user_id} 今日复习数量: {count} - manager.py:239")
             return count
         finally:
             session.close()
@@ -567,7 +564,8 @@ class DatabaseManager:
                 return {"success": False, "msg": "知识点不存在"}
 
             # 创建今日的复习计划
-            # today_end = datetime.now().replace(hour=23, minute=59, second=59
+            # today_end = datetime.now().replace(hour=23, minute=59, second=59)
+            
             today_schedule = ReviewSchedule(
                 knowledge_item_id=knowledge_id,
                 user_id=user_id,
