@@ -1,28 +1,27 @@
+#!/usr/bin/env python3
 """
 主应用程序 - GUI 版本
 """
 
 import customtkinter as ctk
 
-# 使用绝对导入
-from src.database.manager import DatabaseManager
-from src.auth.ui import LoginFrame  
-
+# 使用相对导入
+from database.manager import DatabaseManager
+from auth.ui import LoginFrame  
 
 try:
-    from src.knowledge.ui import KnowledgeManagementFrame  # 添加 src. 前缀
+    from .knowledge.ui import KnowledgeManagementFrame
     KNOWLEDGE_MODULE_AVAILABLE = True
 except ImportError as e:
     KNOWLEDGE_MODULE_AVAILABLE = False
     print(f"⚠️ 知识管理模块导入失败，将使用占位符: {e} - app.py:17")
 
-# 2. 为复习调度模块添加了异常处理
 try:
-    from src.scheduler.ui import ReviewSchedulerFrame
+    from .scheduler.ui import ReviewSchedulerFrame
     SCHEDULER_MODULE_AVAILABLE = True
 except ImportError as e:
     SCHEDULER_MODULE_AVAILABLE = False
-    print(f"⚠️ 复习调度模块导入失败，将使用占位符: {e} - app.py:25")
+    print(f"⚠️ 复习调度模块导入失败，将使用占位符: {e} - app.py:24")
 
 
 class ReviewAlarmApp:
@@ -126,7 +125,6 @@ class ReviewAlarmApp:
         """显示知识管理界面"""
         self.clear_content_frame()
 
-        # 3. 更新知识管理界面：将占位符替换为实际的 KnowledgeManagementFrame
         if KNOWLEDGE_MODULE_AVAILABLE:
             try:
                 knowledge_frame = KnowledgeManagementFrame(
@@ -137,7 +135,7 @@ class ReviewAlarmApp:
                 knowledge_frame.pack(fill="both", expand=True)
                 return
             except Exception as e:
-                print(f"❌ 知识管理界面初始化失败: {e} - app.py:140")
+                print(f"❌ 知识管理界面初始化失败: {e} - app.py:138")
 
         # 备用：显示占位符
         placeholder = ctk.CTkLabel(
@@ -149,36 +147,41 @@ class ReviewAlarmApp:
         
     def show_today_review(self):
         """显示今日复习界面"""
-        self.clear_content_frame()    
+        print("🔄 切换到今日复习界面 - app.py:150")
+        self.clear_content_frame()
 
-        # 4. 添加错误处理：防止模块未完成时程序崩溃
         if SCHEDULER_MODULE_AVAILABLE:
             try:
+                print("🎯 正在创建今日复习界面... - app.py:155")
                 review_frame = ReviewSchedulerFrame(
                     self.content_frame, 
                     self.current_user, 
                     self.db_manager
                 )
                 review_frame.pack(fill="both", expand=True)
+                print("✅ 今日复习界面创建成功 - app.py:162")
                 return
             except Exception as e:
                 print(f"❌ 复习调度界面初始化失败: {e} - app.py:165")
+                import traceback
+                traceback.print_exc()
 
         # 备用：显示占位符
         placeholder = ctk.CTkLabel(
             self.content_frame,
-            text="今日复习界面\n(成员C开发中...)",
+            text="今日复习界面\n(开发中...)",
             font=ctk.CTkFont(size=20, weight="bold"),
         )
         placeholder.pack(expand=True)
-
+        print("⚠️ 使用今日复习界面占位符 - app.py:176")
+ 
     def show_analytics(self):
         """显示统计分析界面"""
         self.clear_content_frame()
 
         placeholder = ctk.CTkLabel(
             self.content_frame,
-            text="学习统计界面\n(成员D开发)",
+            text="学习统计界面\n(开发中)",
             font=ctk.CTkFont(size=20, weight="bold"),
         )
         placeholder.pack(expand=True)

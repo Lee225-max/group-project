@@ -5,11 +5,24 @@ class KnowledgeService:
     def __init__(self, db_manager):
         self.db_manager = db_manager
 
+    def get_user_knowledge(self, user_id):
+        """获取用户知识点列表（包含复习状态）- 新方法"""
+        try:
+            # 使用数据库管理器的增强方法获取包含复习状态的知识点
+            items = self.db_manager.get_knowledge_with_review_status(user_id)
+            print(f"📝 获取到 {len(items)} 个知识点（含复习状态） - service.py:13")
+            return items
+        except Exception as e:
+            print(f"❌ 获取知识点列表出错: {e} - service.py:16")
+            # 回退到基本方法
+            return self.get_user_knowledge_items(user_id)
+
+    # 保持原有的所有方法不变...
     def search_knowledge_items(self, user_id, search_term):
         """搜索知识点"""
         session = self.db_manager.get_session()
         try:
-            print(f"🔍 在数据库中搜索: '{search_term}' - service.py:12")
+            print(f"🔍 在数据库中搜索: '{search_term}' - service.py:25")
             
             # 构建查询：修复 E712 错误（将 is True 改为直接判断）
             query = session.query(KnowledgeItem).filter(
@@ -27,10 +40,10 @@ class KnowledgeService:
                 query = query.filter(search_filter)
             
             items = query.order_by(KnowledgeItem.created_at.desc()).all()
-            print(f"📊 搜索到 {len(items)} 个结果 - service.py:30")
+            print(f"📊 搜索到 {len(items)} 个结果 - service.py:43")
             return items
         except Exception as e:
-            print(f"❌ 搜索出错: {e} - service.py:33")
+            print(f"❌ 搜索出错: {e} - service.py:46")
             return []
         finally:
             session.close()
@@ -44,10 +57,10 @@ class KnowledgeService:
                 KnowledgeItem.user_id == user_id,
                 KnowledgeItem.is_active  # 原错误：KnowledgeItem.is_active is True
             ).order_by(KnowledgeItem.created_at.desc()).all()
-            print(f"📝 获取到 {len(items)} 个知识点 - service.py:47")
+            print(f"📝 获取到 {len(items)} 个知识点 - service.py:60")
             return items
         except Exception as e:
-            print(f"❌ 获取知识点列表出错: {e} - service.py:50")
+            print(f"❌ 获取知识点列表出错: {e} - service.py:63")
             return []
         finally:
             session.close()
@@ -66,11 +79,11 @@ class KnowledgeService:
             session.add(knowledge_item)
             session.commit()
             session.refresh(knowledge_item)
-            print(f"✅ 添加知识点成功: {title} - service.py:69")
+            print(f"✅ 添加知识点成功: {title} - service.py:82")
             return knowledge_item
         except Exception as e:
             session.rollback()
-            print(f"❌ 添加知识点失败: {e} - service.py:73")
+            print(f"❌ 添加知识点失败: {e} - service.py:86")
             raise e
         finally:
             session.close()
@@ -91,11 +104,11 @@ class KnowledgeService:
                 item.category = category
                 
             session.commit()
-            print(f"✅ 更新知识点成功: {item.title} - service.py:94")
+            print(f"✅ 更新知识点成功: {item.title} - service.py:107")
             return item
         except Exception as e:
             session.rollback()
-            print(f"❌ 更新知识点失败: {e} - service.py:98")
+            print(f"❌ 更新知识点失败: {e} - service.py:111")
             raise e
         finally:
             session.close()
@@ -109,12 +122,12 @@ class KnowledgeService:
                 # 软删除
                 item.is_active = False
                 session.commit()
-                print(f"✅ 删除知识点成功: {item.title} - service.py:112")
+                print(f"✅ 删除知识点成功: {item.title} - service.py:125")
                 return True
             return False
         except Exception as e:
             session.rollback()
-            print(f"❌ 删除知识点失败: {e} - service.py:117")
+            print(f"❌ 删除知识点失败: {e} - service.py:130")
             raise e
         finally:
             session.close()
