@@ -34,7 +34,7 @@ def fix_format_issues():
         if not os.path.exists(file_path):
             continue
             
-        print(f"🔧 修复 {file_path}... - fix_format_issues.py:36")
+        print(f"🔧 修复 {file_path}... - fix_format_issues.py:37")
         
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
@@ -42,7 +42,7 @@ def fix_format_issues():
         # 修复1: 文件末尾添加换行符
         if not content.endswith('\n'):
             content += '\n'
-            print(f"✅ 添加文件末尾换行符 - fix_format_issues.py:44")
+            print("✅ 添加文件末尾换行符 - fix_format_issues.py:45")
         
         # 修复2: 删除行尾空白字符
         lines = content.split('\n')
@@ -89,7 +89,7 @@ def fix_format_issues():
         with open(file_path, 'w', encoding='utf-8') as f:
             f.write(content)
         
-        print("✅ 完成格式修复 - fix_format_issues.py:91")
+        print("✅ 完成格式修复 - fix_format_issues.py:92")
 
 
 def fix_specific_issues():
@@ -116,28 +116,28 @@ def fix_specific_issues():
                 if today_end_used:
                     new_lines.append(line)
                 else:
-                    print("⚠️  删除未使用的变量: today_end - fix_format_issues.py:118")
+                    print("⚠️  删除未使用的变量: today_end - fix_format_issues.py:119")
                     continue
             else:
                 new_lines.append(line)
         
         with open(manager_file, 'w') as f:
             f.writelines(new_lines)
-        print("✅ 修复 database/manager.py 的 today_end 问题 - fix_format_issues.py:125")
+        print("✅ 修复 database/manager.py 的 today_end 问题 - fix_format_issues.py:126")
 
 
 def main():
     """主函数"""
-    print("🎯 开始全面修复代码格式问题... - fix_format_issues.py:130")
+    print("🎯 开始全面修复代码格式问题... - fix_format_issues.py:131")
     
     fix_format_issues()
     fix_specific_issues()
     
-    print("🎉 所有格式问题修复完成！ - fix_format_issues.py:135")
-    print("\n📋 建议后续步骤: - fix_format_issues.py:136")
-    print("1. 运行: flake8 src/ tests/ - fix_format_issues.py:137")
-    print("2. 提交修复: git add . && git commit m 'style: 修复代码格式问题' - fix_format_issues.py:138")
-    print("3. 推送到GitHub: git push origin main - fix_format_issues.py:139")
+    print("🎉 所有格式问题修复完成！ - fix_format_issues.py:136")
+    print("\n📋 建议后续步骤: - fix_format_issues.py:137")
+    print("1. 运行: flake8 src/ tests/ - fix_format_issues.py:138")
+    print("2. 提交修复: git add . && git commit m 'style: 修复代码格式问题' - fix_format_issues.py:139")
+    print("3. 推送到GitHub: git push origin main - fix_format_issues.py:140")
 
 
 if __name__ == "__main__":

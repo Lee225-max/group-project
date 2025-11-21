@@ -34,12 +34,7 @@ class SchedulerService:
                 else:
                     print(f"对象属性: {dir(review)} - service.py:35")
                     print(f"ID: {getattr(review, 'id', 'N/A')} - service.py:36")
-                    print(
-                        f"知识点ID: {
-                            getattr(
-                                review,
-                                'knowledge_item_id',
-                                'N/A')} - service.py:37")
+                    print(f"知识点ID: {getattr(review , 'knowledge_item_id' , 'N/A')} - service.py:37")
                     print(f"标题: {getattr(review, 'title', 'N/A')} - service.py:38")
 
             return reviews
@@ -63,12 +58,12 @@ class SchedulerService:
                 schedule_id, user_id, effectiveness, recall_score, notes
             )
             if result["success"]:
-                print("✅ 复习完成成功 - service.py:56")
+                print("✅ 复习完成成功 - service.py:61")
             else:
-                print(f"❌ 复习完成失败: {result.get('msg', '未知错误')} - service.py:58")
+                print(f"❌ 复习完成失败: {result.get('msg', '未知错误')} - service.py:63")
             return result
         except Exception as e:
-            print(f"❌ 完成复习失败: {e} - service.py:61")
+            print(f"❌ 完成复习失败: {e} - service.py:66")
             return {"success": False, "msg": f"完成复习失败: {str(e)}"}
 
     def get_review_stats(self, user_id):
@@ -76,10 +71,10 @@ class SchedulerService:
         try:
             # 使用数据库管理器的方法获取复习统计
             stats = self.db_manager.get_review_stats(user_id)
-            print("📊 获取复习统计成功 - service.py:69")
+            print("📊 获取复习统计成功 - service.py:74")
             return stats
         except Exception:
-            print("❌ 获取复习统计失败 - service.py:72")
+            print("❌ 获取复习统计失败 - service.py:77")
             return {
                 "total_today": 0,
                 "completed_today": 0,
@@ -91,40 +86,40 @@ class SchedulerService:
         """获取今日复习数量"""
         try:
             count = self.db_manager.get_today_review_count(user_id)
-            print(f"📅 今日复习数量: {count} - service.py:84")
+            print(f"📅 今日复习数量: {count} - service.py:89")
             return count
         except Exception:
-            print("❌ 获取今日复习数量失败 - service.py:87")
+            print("❌ 获取今日复习数量失败 - service.py:92")
             return 0
 
     def get_overdue_reviews_count(self, user_id):
         """获取逾期复习数量"""
         try:
             count = self.db_manager.get_overdue_reviews_count(user_id)
-            print(f"⏰ 逾期复习数量: {count} - service.py:94")
+            print(f"⏰ 逾期复习数量: {count} - service.py:99")
             return count
         except Exception:
-            print("❌ 获取逾期复习数量失败 - service.py:97")
+            print("❌ 获取逾期复习数量失败 - service.py:102")
             return 0
 
     def get_ebbinghaus_distribution(self, user_id):
         """获取艾宾浩斯阶段分布"""
         try:
             distribution = self.db_manager.get_ebbinghaus_distribution(user_id)
-            print("📈 获取艾宾浩斯分布成功 - service.py:104")
+            print("📈 获取艾宾浩斯分布成功 - service.py:109")
             return distribution
         except Exception:
-            print("❌ 获取艾宾浩斯分布失败 - service.py:107")
+            print("❌ 获取艾宾浩斯分布失败 - service.py:112")
             return {}
 
     def get_pending_reminders(self):
         """获取待发送提醒"""
         try:
             reminders = self.db_manager.get_pending_reminders()
-            print(f"🔔 获取到 {len(reminders)} 个待发送提醒 - service.py:114")
+            print(f"🔔 获取到 {len(reminders)} 个待发送提醒 - service.py:119")
             return reminders
         except Exception:
-            print("❌ 获取待发送提醒失败 - service.py:117")
+            print("❌ 获取待发送提醒失败 - service.py:122")
             return []
 
     def add_to_today_review(self, knowledge_id, user_id):
@@ -132,22 +127,22 @@ class SchedulerService:
         try:
             result = self.db_manager.add_to_today_review(knowledge_id, user_id)
             if result["success"]:
-                print("✅ 成功将知识点加入今日复习 - service.py:125")
+                print("✅ 成功将知识点加入今日复习 - service.py:130")
             else:
-                print(f"❌ 加入今日复习失败: {result.get('msg', '未知错误')} - service.py:127")
+                print(f"❌ 加入今日复习失败: {result.get('msg', '未知错误')} - service.py:132")
             return result
         except Exception as e:
-            print(f"❌ 加入今日复习失败: {e} - service.py:130")
+            print(f"❌ 加入今日复习失败: {e} - service.py:135")
             return {"success": False, "msg": f"加入今日复习失败: {str(e)}"}
 
     def get_overall_stats(self, user_id):
         """获取整体统计"""
         try:
             stats = self.db_manager.get_overall_stats(user_id)
-            print("📊 获取整体统计成功 - service.py:137")
+            print("📊 获取整体统计成功 - service.py:142")
             return stats
         except Exception:
-            print("❌ 获取整体统计失败 - service.py:140")
+            print("❌ 获取整体统计失败 - service.py:145")
             return {
                 "total_knowledge": 0,
                 "mastered_knowledge": 0,
@@ -160,8 +155,8 @@ class SchedulerService:
         """获取每日复习统计"""
         try:
             stats = self.db_manager.get_daily_review_stats(user_id, days)
-            print(f"📅 获取 {days} 天复习统计成功 - service.py:153")
+            print(f"📅 获取 {days} 天复习统计成功 - service.py:158")
             return stats
         except Exception:
-            print("❌ 获取每日复习统计失败 - service.py:156")
+            print("❌ 获取每日复习统计失败 - service.py:161")
             return []

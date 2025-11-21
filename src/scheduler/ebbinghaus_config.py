@@ -25,7 +25,7 @@ class EbbinghausConfig:
     # 阶段描述
     STAGE_DESCRIPTIONS = [
         # "20分钟后",
-        "立即复习"
+        "立即复习",
         "1小时后",
         "12小时后（睡前）",
         "1天后",
