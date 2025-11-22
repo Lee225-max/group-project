@@ -5,7 +5,6 @@
 
 import platform
 import subprocess
-import sys
 import logging
 import threading
 import time
@@ -18,7 +17,7 @@ try:
     PLYER_AVAILABLE = True
 except ImportError:
     PLYER_AVAILABLE = False
-    print("⚠️  plyer 不可用，将使用备用通知方案 - reminder.py:21")
+    print("⚠️  plyer 不可用，将使用备用通知方案 - reminder.py:20")
 
 logger = logging.getLogger(__name__)
 
@@ -147,7 +146,7 @@ class SystemNotifier:
             return True
         except Exception:
             # 最后的手段：打印到控制台
-            print(f"🔔 {title}: {message} - reminder.py:150")
+            print(f"🔔 {title}: {message} - reminder.py:149")
             return True
 
 
@@ -392,7 +391,7 @@ def test_notification():
         "🔔 测试通知", 
         "这是一条测试系统通知！\n智能复习闹钟提醒您按时复习。"
     )
-    print(f"通知测试: {'✅ 成功' if success else '❌ 失败'} - reminder.py:395")
+    print(f"通知测试: {'✅ 成功' if success else '❌ 失败'} - reminder.py:394")
     return success
 
 
@@ -404,5 +403,5 @@ if __name__ == "__main__":
     )
     
     # 测试通知功能
-    print("🔔 测试系统提醒功能... - reminder.py:407")
+    print("🔔 测试系统提醒功能... - reminder.py:406")
     test_notification()
