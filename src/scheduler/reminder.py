@@ -67,39 +67,34 @@ class SystemNotifier:
             return False
     
     def _mac_notify(self, title: str, message: str) -> bool:
-        """macOS 系统通知 - 增强版"""
+        """macOS 系统通知 - 使用 terminal-notifier"""
         try:
             # 清理消息中的特殊字符
             message_clean = message.replace('"', "'").replace('\n', ' ')
-            title_clean = title.replace('"', "'")
-            
-            # 使用更简单的 AppleScript
+        
+            # 使用与测试脚本相同的 AppleScript 格式
             script = f'''
-            display notification "{message_clean}" with title "{title_clean}"
+            display notification "{message_clean}" with title "📚 智能复习提醒" sound name "default"
             '''
-            
+        
             logger.info(f"  执行 AppleScript: {script.strip()}")
+            result = subprocess.run([
+                "terminal-notifier",
+                "-title", title,
+                "-message", message_clean,
+                "-sound", "default",
+                 "-group", "review-alarm"  # 添加分组标识
+            ], capture_output=True, timeout=10)          
+          
+            if result.returncode == 0:
+                logger.info("   macOS 通知结果: ✅ 成功")
+                return True
+            else:
+                logger.error(f"   macOS 通知失败: {result.stderr}")
+                return False
             
-            result = subprocess.run(
-                ["osascript", "-e", script],
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            
-            if result.returncode != 0:
-                logger.error(f"  AppleScript 错误: {result.stderr}")
-                # 尝试备用方案：使用 Python 的 tkinter
-                return self._fallback_notify(title, message)
-                
-            logger.info("  AppleScript 执行完成")
-            return True
-            
-        except subprocess.TimeoutExpired:
-            logger.error("  AppleScript 执行超时")
-            return False
         except Exception as e:
-            logger.error(f"  macOS 通知失败: {e}")
+            logger.error(f"  macOS 通知异常: {e}")
             return False
     
     def _windows_notify(self, title: str, message: str, timeout: int) -> bool:
@@ -244,17 +239,17 @@ class SystemNotifier:
                 logger.error(f"  tkinter 对话框失败: {e}")
                 
             # 方法2: 使用控制台输出
-            print(f"\n{'='*50} - reminder.py:247")
-            print(f"🔔 {title} - reminder.py:248")
-            print(f"{message} - reminder.py:249")
-            print(f"{'='*50}\n - reminder.py:250")
+            print(f"\n{'='*50} - reminder.py:242")
+            print(f"🔔 {title} - reminder.py:243")
+            print(f"{message} - reminder.py:244")
+            print(f"{'='*50}\n - reminder.py:245")
             logger.info("  已输出到控制台")
             return True
             
         except Exception as e:
             logger.error(f"  备用通知方案失败: {e}")
             # 最终备用：简单的打印
-            print(f"🔔 {title}: {message} - reminder.py:257")
+            print(f"🔔 {title}: {message} - reminder.py:252")
             return True
 
 
@@ -502,7 +497,7 @@ def test_notification():
         "🔔 测试通知", 
         "这是一条测试系统通知！\n智能复习闹钟提醒您按时复习。"
     )
-    print(f"通知测试: {'✅ 成功' if success else '❌ 失败'} - reminder.py:505")
+    print(f"通知测试: {'✅ 成功' if success else '❌ 失败'} - reminder.py:500")
     return success
 
 
@@ -514,5 +509,5 @@ if __name__ == "__main__":
     )
     
     # 测试通知功能
-    print("🔔 测试系统提醒功能... - reminder.py:517")
+    print("🔔 测试系统提醒功能... - reminder.py:512")
     test_notification()
