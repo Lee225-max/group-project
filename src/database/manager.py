@@ -12,7 +12,6 @@ from .models import (
 )
 from datetime import datetime, timedelta
 
-
 class DatabaseManager:
     def __init__(self, db_path="src/database/review_alarm.db"):
         self.db_path = db_path
@@ -397,7 +396,7 @@ class DatabaseManager:
             # 标记当前计划完成
             schedule.completed = True
 
-            # 艾宾浩斯间隔调整规则
+          # 艾宾浩斯间隔调整规则
             from src.scheduler.ebbinghaus_config import EbbinghausConfig
 
             current_index = schedule.interval_index
