@@ -1,7 +1,7 @@
 # -*- codeing =utf-8 -*-
 # @Time : 2025/11/22 18:12
 # @Author: Muncy
-# @File : frontend_ui_main_window.py.py
+# @File : ui.py
 # @Software: PyCharm
 import customtkinter as ctk
 from .login_window import LoginWindow
