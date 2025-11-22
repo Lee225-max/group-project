@@ -6,7 +6,7 @@
 """
 记忆算法 - 成员C实现
 """
-
+'''
 from datetime import datetime, timedelta
 from typing import List
 
@@ -66,3 +66,4 @@ class EbbinghausScheduler:
         )
 
         return last_review_time + timedelta(hours=adjusted_interval)
+'''
