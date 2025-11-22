@@ -9,7 +9,9 @@ import logging
 # 使用相对导入
 from database.manager import DatabaseManager
 from auth.ui import LoginFrame
-
+#加入导入
+from tkinter import Toplevel, Label, Button, StringVar, messagebox, Frame, Scrollbar, Text
+from analytics.stats import ReviewStatsAnalyzer  # 新增：导入统计分析器
 try:
     from .knowledge.ui import KnowledgeManagementFrame
     KNOWLEDGE_MODULE_AVAILABLE = True
@@ -224,7 +226,11 @@ class ReviewAlarmApp:
     def show_reminder_settings(self):
         """显示提醒设置界面"""
         self.clear_content_frame()
-        
+     #228-230新增
+        settings_window = Toplevel(self.root)
+        settings_window.title("提醒设置")
+        settings_window.geometry("400x300")
+
         if not REMINDER_MODULE_AVAILABLE or not self.reminder_service:
             placeholder = ctk.CTkLabel(
                 self.content_frame,
