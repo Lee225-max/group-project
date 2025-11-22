@@ -1,5 +1,5 @@
 """艾宾浩斯统计分析+可视化模块"""
-from src.database.manager import DatabaseManager
+'''from src.database.manager import DatabaseManager
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 from datetime import datetime
@@ -116,3 +116,45 @@ class EbbinghausStatsService:
         plt.title("近7天复习效果趋势", fontsize=14, pad=20)
         plt.tight_layout()
         plt.show()
+'''
+from datetime import datetime, timedelta
+
+
+class ReviewStatsAnalyzer:
+    """复习数据统计分析器（核心类，供UI调用）"""
+
+    def __init__(self, db_manager):
+        """接收数据库管理器实例（避免重复创建数据库连接）"""
+        self.db_manager = db_manager
+
+    def get_overall_review_stats(self, user_id):
+        """统计用户整体复习情况（核心统计维度）"""
+        # 1. 总复习计划数、已完成数
+        total_schedules = self.db_manager.get_total_review_schedules(user_id)
+        completed_schedules = self.db_manager.get_completed_review_schedules(user_id)
+
+        # 2. 复习完成率（避免除零错误）
+        completion_rate = (completed_schedules / total_schedules * 100) if total_schedules > 0 else 0.0
+
+        # 3. 最近7天复习量
+        recent_7d_reviews = self.db_manager.get_reviews_in_date_range(
+            user_id,
+            start_date=datetime.now() - timedelta(days=7),
+            end_date=datetime.now()
+        )
+
+        # 4. 平均复习效果分
+        avg_effectiveness = self.db_manager.get_avg_review_effectiveness(user_id)
+
+        # 返回格式化结果（供UI展示）
+        return {
+            "total_schedules": total_schedules,
+            "completed_schedules": completed_schedules,
+            "completion_rate": round(completion_rate, 1),  # 保留1位小数
+            "recent_7d_reviews": recent_7d_reviews,
+            "avg_effectiveness": round(avg_effectiveness, 1) if avg_effectiveness else 0.0
+        }
+
+    def get_knowledge_mastery(self, user_id):
+        """统计各知识点掌握情况（可选扩展维度）"""
+        return self.db_manager.get_knowledge_review_stats(user_id)
