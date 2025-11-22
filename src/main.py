@@ -11,7 +11,6 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 """主函数"""
 
-
 def main():
     try:
         app = ReviewAlarmApp()
@@ -19,7 +18,6 @@ def main():
     except Exception as e:
         print(f"程序启动失败: {e} - main.py:20")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
