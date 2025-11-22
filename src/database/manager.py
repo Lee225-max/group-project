@@ -18,7 +18,88 @@ class DatabaseManager:
         self.engine = create_engine(f"sqlite:///{db_path}")
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)  # 自动创建表
+#从这里开始
+    # ========== 新增统计查询方法 ==========
+    def get_total_review_schedules(self, user_id):
+        """查询用户总复习计划数"""
+        session = self.get_session()
+        try:
+            count = session.query(ReviewSchedule).filter(
+                ReviewSchedule.user_id == user_id
+            ).count()
+            return count
+        finally:
+            session.close()
 
+    def get_completed_review_schedules(self, user_id):
+        """查询用户已完成的复习计划数"""
+        session = self.get_session()
+        try:
+            count = session.query(ReviewSchedule).filter(
+                ReviewSchedule.user_id == user_id,
+                ReviewSchedule.completed == True
+            ).count()
+            return count
+        finally:
+            session.close()
+
+    def get_reviews_in_date_range(self, user_id, start_date, end_date):
+        """查询指定日期范围内的复习次数"""
+        session = self.get_session()
+        try:
+            count = session.query(ReviewRecord).join(
+                ReviewSchedule, ReviewRecord.schedule_id == ReviewSchedule.id
+            ).filter(
+                ReviewSchedule.user_id == user_id,
+                ReviewRecord.review_date >= start_date,
+                ReviewRecord.review_date <= end_date
+            ).count()
+            return count
+        finally:
+            session.close()
+
+    def get_avg_review_effectiveness(self, user_id):
+        """查询用户平均复习效果分"""
+        session = self.get_session()
+        try:
+            avg_score = session.query(func.avg(ReviewRecord.effectiveness)).join(
+                ReviewSchedule, ReviewRecord.schedule_id == ReviewSchedule.id
+            ).filter(
+                ReviewSchedule.user_id == user_id
+            ).scalar()
+            return float(avg_score) if avg_score else 0.0
+        finally:
+            session.close()
+
+    def get_knowledge_review_stats(self, user_id):
+        """查询各知识点的复习统计"""
+        session = self.get_session()
+        try:
+            stats = session.query(
+                KnowledgeItem.id,
+                KnowledgeItem.title,
+                func.count(ReviewRecord.id).label('review_count'),
+                func.avg(ReviewRecord.effectiveness).label('avg_effect')
+            ).outerjoin(
+                ReviewSchedule, KnowledgeItem.id == ReviewSchedule.knowledge_item_id
+            ).outerjoin(
+                ReviewRecord, ReviewSchedule.id == ReviewRecord.schedule_id
+            ).filter(
+                KnowledgeItem.user_id == user_id
+            ).group_by(KnowledgeItem.id, KnowledgeItem.title).all()
+
+            return [
+                {
+                    "knowledge_id": item.id,
+                    "title": item.title,
+                    "review_count": review_count or 0,
+                    "avg_effect": round(float(avg_effect), 1) if avg_effect else 0.0
+                }
+                for item, review_count, avg_effect in stats
+            ]
+        finally:
+            session.close()
+#以上是新增
     def get_session(self):
         """获取数据库会话"""
         return self.Session()
