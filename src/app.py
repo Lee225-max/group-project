@@ -358,6 +358,32 @@ class ReviewAlarmApp:
             )
             btn.pack(side="left", padx=5)
 
+ #改show_analytics方法
+    def show_analytics(self):
+        """显示统计分析界面"""
+        self.clear_content_frame()
+
+        try:
+            # 导入统计界面
+            from analytics.ui import AnalyticsFrame
+
+            analytics_frame = AnalyticsFrame(
+                self.content_frame,
+                self.current_user,
+                self.db_manager
+            )
+            analytics_frame.pack(fill="both", expand=True, padx=10, pady=10)
+
+        except ImportError as e:
+            print(f"统计模块导入失败: {e}")
+            # 备用占位符
+            placeholder = ctk.CTkLabel(
+                self.content_frame,
+                text="学习统计界面\n(模块加载失败)",
+                font=ctk.CTkFont(size=20, weight="bold"),
+            )
+            placeholder.pack(expand=True)
+            #362-385
     def show_settings(self):
         """显示设置界面"""
         self.clear_content_frame()
