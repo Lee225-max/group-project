@@ -17,10 +17,10 @@ import matplotlib
 matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
-from sqlalchemy import func
-from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
 
-from datetime import datetime, timedelta
+from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
+from sqlalchemy import func
+
 from src.database.manager import DatabaseManager
 
 
