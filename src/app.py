@@ -210,7 +210,7 @@ class ReviewAlarmApp:
         placeholder.pack(expand=True)
         print("⚠️ 使用今日复习界面占位符 - app.py:211")
 
-    def show_analytics(self):
+    '''def show_analytics(self):
         """显示统计分析界面"""
         self.clear_content_frame()
 
@@ -219,7 +219,20 @@ class ReviewAlarmApp:
             text="学习统计界面\n(开发中)",
             font=ctk.CTkFont(size=20, weight="bold"),
         )
-        placeholder.pack(expand=True)
+        placeholder.pack(expand=True)'''
+
+    def show_analytics(self):
+        """显示统计分析界面"""
+        self.clear_content_frame()
+
+        from analytics.ui import AnalyticsFrame
+        analytics_frame = AnalyticsFrame(
+            self.content_frame,
+            self.current_user,
+            self.db_manager
+        )
+        analytics_frame.pack(fill="both", expand=True)
+#更改调用
 
     def show_reminder_settings(self):
         """显示提醒设置界面"""
