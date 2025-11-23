@@ -16,6 +16,9 @@ from io import BytesIO
 import base64
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Tuple
+import os
+from datetime import datetime, timedelta
+
 
 #from src.common.interfaces import IAnalyticsService
 from src.database.manager import DatabaseManager
@@ -31,15 +34,36 @@ class AnalyticsService():#（IAnalyticsService）
         try:
             # 尝试使用系统中文字体
             self.font_path = self._find_chinese_font()
-            self.chinese_font = fm.FontProperties(fname=self.font_path)
-        except:
+            if self.font_path:
+                self.chinese_font = fm.FontProperties(fname=self.font_path)
+                #
+            else:
+                self.chinese_font = None
+        except Exception:
             # 如果没有找到中文字体，使用默认字体
             self.chinese_font = None
 
     def _find_chinese_font(self):
         """查找系统中可用的中文字体"""
         # 常见的中文字体路径
-        chinese_fonts = [
+        candidates = [
+            # macOS
+            "/System/Library/Fonts/PingFang.ttc",
+            "/System/Library/Fonts/Helvetica.ttc",
+            # Windows
+            "C:/Windows/Fonts/simhei.ttf",
+            "C:/Windows/Fonts/msyh.ttc",
+            "C:/Windows/Fonts/msyh.ttf",
+             # Linux 常见中文字体
+            "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
+            "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
+            "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",]
+        for font_path in candidates:
+            if os.path.exists(font_path):
+                return font_path
+        return None
+        '''chinese_fonts = [
             # macOS
             '/System/Library/Fonts/PingFang.ttc',
             '/System/Library/Fonts/Helvetica.ttc',
@@ -56,7 +80,7 @@ class AnalyticsService():#（IAnalyticsService）
 
         # 如果没找到，使用matplotlib默认字体
         return fm.findfont(fm.FontProperties(family='sans-serif'))
-
+'''
     def get_user_stats(self, user_id: int) -> Dict[str, Any]:
         """获取用户学习统计数据"""
         session = self.db_manager.get_session()
@@ -66,7 +90,7 @@ class AnalyticsService():#（IAnalyticsService）
             # 总知识点数量
             total_items = session.query(KnowledgeItem).filter(
                 KnowledgeItem.user_id == user_id,
-                KnowledgeItem.is_active == True
+                KnowledgeItem.is_active# == True
             ).count()
 
             # 今日复习数量
@@ -75,7 +99,7 @@ class AnalyticsService():#（IAnalyticsService）
                 ReviewSchedule.user_id == user_id,
                 ReviewSchedule.scheduled_date >= today_start,
                 ReviewSchedule.scheduled_date < today_start + timedelta(days=1),
-                ReviewSchedule.completed == False
+                ReviewSchedule.completed# == False
             ).count()
 
             # 已完成复习数量
