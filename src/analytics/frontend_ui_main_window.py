@@ -1,17 +1,17 @@
 # -*- codeing =utf-8 -*-
 # @Time : 2025/11/22 18:12
 # @Author: Muncy
-# @File : frontend_ui_main_window.py.py
+# @File : frontend_ui_main_window.py
 # @Software: PyCharm
-import customtkinter as ctk
-from .login_window import LoginWindow
-from .knowledge_window import KnowledgeWindow
-from .analytics_window import AnalyticsWindow
+'''import customtkinter as ctk
+from login_window import LoginWindow
+from src.knowledge import KnowledgeService
+from analytics_window import AnalyticsWindow#考虑改掉调用from的命名
 # frontend/api_client.py
 import requests
 import json
 
-class MainWindow(ctk.CTk):
+class ReviewAlarmApp(ctk.CTk):#把MainWindow改为ReviewAlarmApp
     def __init__(self):
         super().__init__()
 
@@ -20,7 +20,7 @@ class MainWindow(ctk.CTk):
 
         # 设置主题
         ctk.set_appearance_mode("System")
-        ctk.set_default_color_theme("blue")
+        ctk.set_default_color_theme("yellow")
 
         self.api_client = None  # API客户端实例
         self.current_user = None
@@ -31,7 +31,7 @@ class MainWindow(ctk.CTk):
         # 创建左侧导航栏
         self.navigation_frame = ctk.CTkFrame(self, width=200, corner_radius=0)
         self.navigation_frame.grid(row=0, column=0, sticky="nsew")
-        self.navigation_frame.grid_rowconfigure(4, weight=1)
+        self.navigation_frame.grid_rowconfigure(4, weight=5)
 
         # 导航按钮
         self.knowledge_button = ctk.CTkButton(
@@ -80,7 +80,7 @@ class MainWindow(ctk.CTk):
         for widget in self.main_frame.winfo_children():
             widget.destroy()
 
-        KnowledgeWindow(self.main_frame, self.api_client)
+        KnowledgeService(self.main_frame, self.api_client)
 
     def show_analytics_tab(self):
         for widget in self.main_frame.winfo_children():
@@ -117,3 +117,4 @@ class APIClient:
             headers=headers
         )
         return response.json() if response.status_code == 200 else []
+'''
