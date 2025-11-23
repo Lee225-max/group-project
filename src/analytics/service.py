@@ -6,6 +6,7 @@
 """
 统计分析服务
 """
+from __future__ import annotations
 import base64
 import os
 from datetime import datetime, timedelta
@@ -16,16 +17,10 @@ import matplotlib
 matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
-
-
+from sqlalchemy import func
+from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
 
 from datetime import datetime, timedelta
-
-
-
-
-
-#from src.common.interfaces import IAnalyticsService
 from src.database.manager import DatabaseManager
 
 
@@ -36,7 +31,14 @@ class AnalyticsService():#（IAnalyticsService）
         self.db_manager = db_manager
 
         # 设置中文字体
+        self.font_path = self._find_chinese_font()
         try:
+            self.chinese_font = (
+                fm.FontProperties(fname=self.font_path) if self.font_path else None
+            )
+        except Exception:
+            self.chinese_font = None
+        '''try:
             # 尝试使用系统中文字体
             self.font_path = self._find_chinese_font()
             if self.font_path:
@@ -47,10 +49,9 @@ class AnalyticsService():#（IAnalyticsService）
         except Exception:
             # 如果没有找到中文字体，使用默认字体
             self.chinese_font = None
-
-    def _find_chinese_font(self):
+'''
+    def _find_chinese_font(self) -> str | None:
         """查找系统中可用的中文字体"""
-        # 常见的中文字体路径
         candidates = [
             # macOS
             "/System/Library/Fonts/PingFang.ttc",
@@ -59,38 +60,23 @@ class AnalyticsService():#（IAnalyticsService）
             "C:/Windows/Fonts/simhei.ttf",
             "C:/Windows/Fonts/msyh.ttc",
             "C:/Windows/Fonts/msyh.ttf",
-             # Linux 常见中文字体
+            # Linux
             "/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc",
             "/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc",
             "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
-            "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",]
+            "/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf",
+        ]
         for font_path in candidates:
             if os.path.exists(font_path):
                 return font_path
         return None
-        '''chinese_fonts = [
-            # macOS
-            '/System/Library/Fonts/PingFang.ttc',
-            '/System/Library/Fonts/Helvetica.ttc',
-            # Windows
-            'C:/Windows/Fonts/simhei.ttf',
-            'C:/Windows/Fonts/msyh.ttc',
-            # Linux
-            '/usr/share/fonts/truetype/droid/DroidSansFallbackFull.ttf'
-        ]
 
-        for font_path in chinese_fonts:
-            if fm.findfont(fm.FontProperties(fname=font_path)):
-                return font_path
 
-        # 如果没找到，使用matplotlib默认字体
-        return fm.findfont(fm.FontProperties(family='sans-serif'))
-'''
     def get_user_stats(self, user_id: int) -> Dict[str, Any]:
         """获取用户学习统计数据"""
         session = self.db_manager.get_session()
         try:
-            from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
+           # from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
 
             # 总知识点数量
             total_items = session.query(KnowledgeItem).filter(
@@ -175,7 +161,7 @@ class AnalyticsService():#（IAnalyticsService）
 
     def _calculate_learning_efficiency(self, session, user_id: int) -> float:
         """计算学习效率"""
-        from src.database.models import ReviewRecord, KnowledgeItem
+       # from src.database.models import ReviewRecord, KnowledgeItem
 
         # 获取最近7天的复习记录
         seven_days_ago = datetime.now() - timedelta(days=7)
@@ -201,7 +187,7 @@ class AnalyticsService():#（IAnalyticsService）
         """创建学习统计图表，返回base64编码的图片"""
         session = self.db_manager.get_session()
         try:
-            from src.database.models import ReviewRecord, KnowledgeItem
+        #    from src.database.models import ReviewRecord, KnowledgeItem
 
             # 获取最近30天的学习数据
             thirty_days_ago = datetime.now() - timedelta(days=30)
@@ -313,7 +299,7 @@ class AnalyticsService():#（IAnalyticsService）
         """获取复习效果分析"""
         session = self.db_manager.get_session()
         try:
-            from src.database.models import ReviewRecord, KnowledgeItem
+        #    from src.database.models import ReviewRecord, KnowledgeItem
 
             effectiveness_data = session.query(ReviewRecord.effectiveness).filter(
                 ReviewRecord.knowledge_item_id.in_(
