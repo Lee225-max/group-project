@@ -209,8 +209,9 @@ class AnalyticsFrame(ctk.CTkFrame):
             # 在主线程中更新UI
             self.after(0, self._update_ui)
 
-        except Exception as e:
-            self.after(0, lambda: messagebox.showerror("错误", f"加载数据失败: {str(e)}"))
+        except Exception as err:#e
+            self.after(0,lambda message=str(err): messagebox.showerror("错误", f"加载数据失败: {message}"))
+            #self.after(0, lambda: messagebox.showerror("错误", f"加载数据失败: {str(e)}"))
 
     def _update_ui(self):
         """更新UI显示"""
