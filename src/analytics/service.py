@@ -19,12 +19,10 @@ import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 
 from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
-from sqlalchemy import func
-
 from src.database.manager import DatabaseManager
 
 
-class AnalyticsService():#（IAnalyticsService）
+class AnalyticsService:#（IAnalyticsService）
     """统计分析服务实现"""
 
     def __init__(self, db_manager: DatabaseManager):
@@ -38,18 +36,7 @@ class AnalyticsService():#（IAnalyticsService）
             )
         except Exception:
             self.chinese_font = None
-        '''try:
-            # 尝试使用系统中文字体
-            self.font_path = self._find_chinese_font()
-            if self.font_path:
-                self.chinese_font = fm.FontProperties(fname=self.font_path)
-                #
-            else:
-                self.chinese_font = None
-        except Exception:
-            # 如果没有找到中文字体，使用默认字体
-            self.chinese_font = None
-'''
+
     def _find_chinese_font(self) -> str | None:
         """查找系统中可用的中文字体"""
         candidates = [
@@ -76,38 +63,36 @@ class AnalyticsService():#（IAnalyticsService）
         """获取用户学习统计数据"""
         session = self.db_manager.get_session()
         try:
-           # from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
-
             # 总知识点数量
-            total_items = session.query(KnowledgeItem).filter(
+            total_items = (session.query(KnowledgeItem).filter(
                 KnowledgeItem.user_id == user_id,
-                KnowledgeItem.is_active# == True
-            ).count()
+                KnowledgeItem.is_active,
+            ).count())
 
             # 今日复习数量
             today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-            today_reviews = session.query(ReviewSchedule).filter(
+            today_reviews = (session.query(ReviewSchedule).filter(
                 ReviewSchedule.user_id == user_id,
                 ReviewSchedule.scheduled_date >= today_start,
                 ReviewSchedule.scheduled_date < today_start + timedelta(days=1),
-                ReviewSchedule.completed# == False
-            ).count()
+                ReviewSchedule.completed,
+            ).count())
 
             # 已完成复习数量
-            completed_reviews = session.query(ReviewRecord).filter(
+            completed_reviews = (session.query(ReviewRecord).filter(
                 ReviewRecord.knowledge_item_id.in_(
                     session.query(KnowledgeItem.id).filter(KnowledgeItem.user_id == user_id)
                 )
-            ).count()
+            ).count())
 
             # 计算记忆保持率（基于最近30天的复习记录）
             thirty_days_ago = datetime.now() - timedelta(days=30)
-            recent_records = session.query(ReviewRecord).filter(
+            recent_records = (session.query(ReviewRecord).filter(
                 ReviewRecord.knowledge_item_id.in_(
                     session.query(KnowledgeItem.id).filter(KnowledgeItem.user_id == user_id)
                 ),
                 ReviewRecord.review_date >= thirty_days_ago
-            ).all()
+            ).all())
 
             if recent_records:
                 avg_recall_score = sum(record.recall_score or 0 for record in recent_records) / len(recent_records)
@@ -124,7 +109,7 @@ class AnalyticsService():#（IAnalyticsService）
                 "completed_reviews": completed_reviews,
                 "retention_rate": round(retention_rate, 1),
                 "streak_days": streak_days,
-                "learning_efficiency": self._calculate_learning_efficiency(session, user_id)
+                "learning_efficiency": self._calculate_learning_efficiency(session, user_id),
             }
 
         finally:
@@ -132,14 +117,13 @@ class AnalyticsService():#（IAnalyticsService）
 
     def _calculate_streak_days(self, session, user_id: int) -> int:
         """计算连续学习天数"""
-        from src.database.models import ReviewRecord, KnowledgeItem
 
         # 获取用户的所有复习记录日期
-        review_dates = session.query(ReviewRecord.review_date).filter(
+        review_dates = (session.query(ReviewRecord.review_date).filter(
             ReviewRecord.knowledge_item_id.in_(
                 session.query(KnowledgeItem.id).filter(KnowledgeItem.user_id == user_id)
             )
-        ).distinct().all()
+        ).distinct().all())
 
         if not review_dates:
             return 0
@@ -161,16 +145,15 @@ class AnalyticsService():#（IAnalyticsService）
 
     def _calculate_learning_efficiency(self, session, user_id: int) -> float:
         """计算学习效率"""
-       # from src.database.models import ReviewRecord, KnowledgeItem
 
         # 获取最近7天的复习记录
         seven_days_ago = datetime.now() - timedelta(days=7)
-        recent_records = session.query(ReviewRecord).filter(
+        recent_records = (session.query(ReviewRecord).filter(
             ReviewRecord.knowledge_item_id.in_(
                 session.query(KnowledgeItem.id).filter(KnowledgeItem.user_id == user_id)
             ),
             ReviewRecord.review_date >= seven_days_ago
-        ).all()
+        ).all())
 
         if not recent_records:
             return 0.0
@@ -187,25 +170,26 @@ class AnalyticsService():#（IAnalyticsService）
         """创建学习统计图表，返回base64编码的图片"""
         session = self.db_manager.get_session()
         try:
-        #    from src.database.models import ReviewRecord, KnowledgeItem
 
             # 获取最近30天的学习数据
             thirty_days_ago = datetime.now() - timedelta(days=30)
 
             # 查询每日复习数量
-            daily_reviews = session.query(
+            daily_reviews = (session.query(
                 ReviewRecord.review_date,
                 ReviewRecord.recall_score
             ).filter(
                 ReviewRecord.knowledge_item_id.in_(
                     session.query(KnowledgeItem.id).filter(KnowledgeItem.user_id == user_id)
                 ),
-                ReviewRecord.review_date >= thirty_days_ago
-            ).all()
+                ReviewRecord.review_date >= thirty_days_ago,
+            ).all())
 
             # 组织数据
-            date_counts = {}
-            date_scores = {}
+            date_counts: Dict[datetime.date, int] = {}
+            date_scores: Dict[datetime.date, List[float]] = {}
+           # date_counts = {}
+           # date_scores = {}
 
             for record in daily_reviews:
                 date = record.review_date.date()
@@ -220,7 +204,8 @@ class AnalyticsService():#（IAnalyticsService）
             review_counts = [date_counts.get(date, 0) for date in dates]
             avg_scores = [
                 round(sum(date_scores.get(date, [0])) / len(date_scores.get(date, [1])), 2)
-                if date in date_scores else 0
+                if date in date_scores
+                else 0
                 for date in dates
             ]
 
@@ -275,17 +260,15 @@ class AnalyticsService():#（IAnalyticsService）
         """获取知识点分类统计"""
         session = self.db_manager.get_session()
         try:
-            from src.database.models import KnowledgeItem
-
-            category_stats = session.query(
+            category_stats = (session.query(
                 KnowledgeItem.category,
                 KnowledgeItem.id
             ).filter(
                 KnowledgeItem.user_id == user_id,
-                KnowledgeItem.is_active == True
-            ).all()
+                KnowledgeItem.is_active,
+            ).all())
 
-            stats = {}
+            stats: Dict[str, int] = {}#stats = {}
             for category, item_id in category_stats:
                 cat_name = category or "未分类"
                 stats[cat_name] = stats.get(cat_name, 0) + 1
@@ -299,19 +282,17 @@ class AnalyticsService():#（IAnalyticsService）
         """获取复习效果分析"""
         session = self.db_manager.get_session()
         try:
-        #    from src.database.models import ReviewRecord, KnowledgeItem
-
-            effectiveness_data = session.query(ReviewRecord.effectiveness).filter(
+            effectiveness_data = (session.query(ReviewRecord.effectiveness).filter(
                 ReviewRecord.knowledge_item_id.in_(
                     session.query(KnowledgeItem.id).filter(KnowledgeItem.user_id == user_id)
                 ),
-                ReviewRecord.effectiveness.isnot(None)
-            ).all()
+                ReviewRecord.effectiveness.isnot(None),
+            ).all())
 
             if not effectiveness_data:
                 return {}
 
-            effectiveness_counts = {}
+            effectiveness_counts: Dict[int, int] = {}#effectiveness_counts = {}
             for eff in effectiveness_data:
                 effectiveness_counts[eff[0]] = effectiveness_counts.get(eff[0], 0) + 1
 
@@ -321,7 +302,7 @@ class AnalyticsService():#（IAnalyticsService）
                 "良好": effectiveness_counts.get(4, 0) / total * 100,
                 "一般": effectiveness_counts.get(3, 0) / total * 100,
                 "较差": effectiveness_counts.get(2, 0) / total * 100,
-                "困难": effectiveness_counts.get(1, 0) / total * 100
+                "困难": effectiveness_counts.get(1, 0) / total * 100,
             }
 
         finally:
