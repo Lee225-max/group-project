@@ -44,7 +44,13 @@ class SchedulerService:
             traceback.print_exc()
             return []
 
-    def complete_review(self, schedule_id, user_id, effectiveness, recall_score, notes=None):
+    def complete_review(
+            self,
+            schedule_id,
+            user_id,
+            effectiveness,
+            recall_score,
+            notes=None):
         """完成复习"""
         try:
             # 使用数据库管理器的方法完成复习

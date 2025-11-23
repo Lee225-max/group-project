@@ -12,94 +12,14 @@ from .models import (
 )
 from datetime import datetime, timedelta
 
+
 class DatabaseManager:
     def __init__(self, db_path="src/database/review_alarm.db"):
         self.db_path = db_path
         self.engine = create_engine(f"sqlite:///{db_path}")
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)  # 自动创建表
-#从这里开始
-    # ========== 新增统计查询方法 ==========
-    def get_total_review_schedules(self, user_id):
-        """查询用户总复习计划数"""
-        session = self.get_session()
-        try:
-            count = session.query(ReviewSchedule).filter(
-                ReviewSchedule.user_id == user_id
-            ).count()
-            return count
-        finally:
-            session.close()
 
-    def get_completed_review_schedules(self, user_id):
-        """查询用户已完成的复习计划数"""
-        session = self.get_session()
-        try:
-            count = session.query(ReviewSchedule).filter(
-                ReviewSchedule.user_id == user_id,
-                ReviewSchedule.completed == True
-            ).count()
-            return count
-        finally:
-            session.close()
-
-    def get_reviews_in_date_range(self, user_id, start_date, end_date):
-        """查询指定日期范围内的复习次数"""
-        session = self.get_session()
-        try:
-            count = session.query(ReviewRecord).join(
-                ReviewSchedule, ReviewRecord.schedule_id == ReviewSchedule.id
-            ).filter(
-                ReviewSchedule.user_id == user_id,
-                ReviewRecord.review_date >= start_date,
-                ReviewRecord.review_date <= end_date
-            ).count()
-            return count
-        finally:
-            session.close()
-
-    def get_avg_review_effectiveness(self, user_id):
-        """查询用户平均复习效果分"""
-        session = self.get_session()
-        try:
-            avg_score = session.query(func.avg(ReviewRecord.effectiveness)).join(
-                ReviewSchedule, ReviewRecord.schedule_id == ReviewSchedule.id
-            ).filter(
-                ReviewSchedule.user_id == user_id
-            ).scalar()
-            return float(avg_score) if avg_score else 0.0
-        finally:
-            session.close()
-
-    def get_knowledge_review_stats(self, user_id):
-        """查询各知识点的复习统计"""
-        session = self.get_session()
-        try:
-            stats = session.query(
-                KnowledgeItem.id,
-                KnowledgeItem.title,
-                func.count(ReviewRecord.id).label('review_count'),
-                func.avg(ReviewRecord.effectiveness).label('avg_effect')
-            ).outerjoin(
-                ReviewSchedule, KnowledgeItem.id == ReviewSchedule.knowledge_item_id
-            ).outerjoin(
-                ReviewRecord, ReviewSchedule.id == ReviewRecord.schedule_id
-            ).filter(
-                KnowledgeItem.user_id == user_id
-            ).group_by(KnowledgeItem.id, KnowledgeItem.title).all()
-
-            return [
-                {
-                    "knowledge_id": item.id,
-                    "title": item.title,
-                    "review_count": review_count or 0,
-                    "avg_effect": round(float(avg_effect), 1) if avg_effect else 0.0
-                }
-                for item, review_count, avg_effect in stats
-            ]
-        finally:
-            session.close()
-#以上是新增
     def get_session(self):
         """获取数据库会话"""
         return self.Session()
@@ -439,82 +359,95 @@ class DatabaseManager:
         finally:
             session.close()
 
- # 整个改了
-    class DatabaseManager:
-        # 原有方法：__init__（数据库连接初始化）
-        def __init__(self, db_path="review_app.db"):
-            self.db_path = db_path
-            self._init_db()  # 假设原有初始化数据库方法
+    def complete_review(
+        self, schedule_id, user_id, effectiveness, recall_score, notes=None
+    ):
+        """完成复习+生成下次计划（艾宾浩斯核心）"""
+        session = self.get_session()
+        try:
+            # 验证复习计划
+            schedule = (
+                session.query(ReviewSchedule)
+                .filter(
+                    ReviewSchedule.id == schedule_id,
+                    ReviewSchedule.user_id == user_id,
+                    ~ReviewSchedule.completed,
+                )
+                .first()
+            )
+            if not schedule:
+                return {"success": False, "msg": "复习计划不存在或已完成"}
 
-        # 原有方法：complete_review（你已有的复习完成逻辑）
-        def complete_review(self, schedule_id, user_id, effectiveness, recall_score, notes=None):
-            # 你的原有代码（验证计划、创建记录、生成下次复习）
-            ...  # 这是你已有的逻辑，保持不变
-            # （complete_review方法结束，下面就是要新增的方法）
+            # 验证评分范围
+            if not (1 <= effectiveness <= 5):
+                return {"success": False, "msg": "效果评分需在1-5分之间"}
+            if not (0 <= recall_score <= 100):
+                return {"success": False, "msg": "回忆分数需在0-100之间"}
 
-        # ========== 从这里开始粘贴新增的统计查询方法 ==========
-        def get_total_review_schedules(self, user_id):
-            """查询用户总复习计划数"""
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT COUNT(*) FROM review_schedules WHERE user_id = ?
-                """, (user_id,))
-                return cursor.fetchone()[0]
+            # 创建复习记录
+            record = ReviewRecord(
+                knowledge_item_id=schedule.knowledge_item_id,
+                schedule_id=schedule_id,
+                effectiveness=effectiveness,
+                recall_score=recall_score,
+                notes=notes,
+            )
+            session.add(record)
 
-        def get_completed_review_schedules(self, user_id):
-            """查询用户已完成的复习计划数"""
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT COUNT(*) FROM review_schedules WHERE user_id = ? AND is_completed = 1
-                """, (user_id,))
-                return cursor.fetchone()[0]
+            # 标记当前计划完成
+            schedule.completed = True
 
-        def get_reviews_in_date_range(self, user_id, start_date, end_date):
-            """查询指定日期范围内的复习次数"""
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT COUNT(*) FROM review_records 
-                    WHERE user_id = ? AND review_date BETWEEN ? AND ?
-                """, (user_id, start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d")))
-                return cursor.fetchone()[0]
+            # 艾宾浩斯间隔调整规则
+            from src.scheduler.ebbinghaus_config import EbbinghausConfig
 
-        def get_avg_review_effectiveness(self, user_id):
-            """查询用户平均复习效果分"""
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT AVG(effectiveness) FROM review_records WHERE user_id = ?
-                """, (user_id,))
-                result = cursor.fetchone()[0]
-                return result if result is not None else 0.0
+            current_index = schedule.interval_index
+            item = schedule.knowledge_item
 
-        def get_knowledge_review_stats(self, user_id):
-            """查询各知识点的复习统计（次数+平均效果）"""
-            with self._get_connection() as conn:
-                cursor = conn.cursor()
-                cursor.execute("""
-                    SELECT k.id, k.title, COUNT(r.id) as review_count, AVG(r.effectiveness) as avg_effect
-                    FROM knowledge_items k
-                    LEFT JOIN review_schedules s ON k.id = s.knowledge_item_id
-                    LEFT JOIN review_records r ON s.id = r.schedule_id
-                    WHERE k.user_id = ?
-                    GROUP BY k.id, k.title
-                """, (user_id,))
-                return [
-                    {
-                        "knowledge_id": row[0],
-                        "title": row[1],
-                        "review_count": row[2],
-                        "avg_effect": round(row[3], 1) if row[3] is not None else 0.0
-                    }
-                    for row in cursor.fetchall()
-                ]
-        # ========== 新增方法结束 ==========
+            # 根据效果调整阶段
+            if effectiveness >= 4:
+                next_index = current_index + 1
+            elif effectiveness >= 2:
+                next_index = current_index
+            else:
+                next_index = max(0, current_index - 1)
 
-    # （DatabaseManager类结束）
+            # 限制最大阶段（避免越界）
+            if next_index >= EbbinghausConfig.get_total_stages():
+                session.commit()
+                return {
+                    "success": True,
+                    "msg": "已完成所有艾宾浩斯阶段，知识点标记为已掌握",
+                }
+
+            # 计算下次间隔（使用艾宾浩斯标准间隔）
+            next_interval_hours = EbbinghausConfig.get_interval_hours(next_index)
+            next_review_date = EbbinghausConfig.get_next_review_date(next_index)
+
+            # 生成下次复习计划
+            next_schedule = ReviewSchedule(
+                knowledge_item_id=item.id,
+                user_id=user_id,
+                scheduled_date=next_review_date,
+                interval_index=next_index,
+                current_interval=next_interval_hours,
+                current_interval_unit=IntervalUnit.HOUR,
+            )
+            session.add(next_schedule)
+            session.commit()
+
+            return {
+                "success": True,
+                "msg": f"复习完成！下次复习时间：{next_schedule.scheduled_date.strftime('%Y-%m-%d %H:%M')}",
+                "data": {
+                    "next_schedule_id": next_schedule.id,
+                    "next_review_date": next_schedule.scheduled_date,
+                },
+            }
+        except Exception as e:
+            session.rollback()
+            return {"success": False, "msg": f"提交失败：{str(e)}"}
+        finally:
+            session.close()
 
     # ------------------------------
     # 统计相关（供analytics模块调用）

@@ -5,10 +5,12 @@
 # @Software: PyCharm
 import matplotlib.pyplot as plt
 import matplotlib
+
+matplotlib.use('Agg')  # 非交互式后端
 from io import BytesIO
 import base64
 from datetime import datetime, timedelta
-matplotlib.use('Agg')  # 非交互式后端
+
 
 class AnalyticsVisualization:
     def __init__(self, db):

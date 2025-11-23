@@ -9,9 +9,7 @@ import logging
 # 使用相对导入
 from database.manager import DatabaseManager
 from auth.ui import LoginFrame
-#加入导入
-from tkinter import Toplevel, Label, Button, StringVar, messagebox, Frame, Scrollbar, Text
-from analytics.stats import ReviewStatsAnalyzer  # 新增：导入统计分析器
+
 try:
     from .knowledge.ui import KnowledgeManagementFrame
     KNOWLEDGE_MODULE_AVAILABLE = True
@@ -226,11 +224,7 @@ class ReviewAlarmApp:
     def show_reminder_settings(self):
         """显示提醒设置界面"""
         self.clear_content_frame()
-     #228-230新增
-        settings_window = Toplevel(self.root)
-        settings_window.title("提醒设置")
-        settings_window.geometry("400x300")
-
+        
         if not REMINDER_MODULE_AVAILABLE or not self.reminder_service:
             placeholder = ctk.CTkLabel(
                 self.content_frame,
@@ -358,32 +352,6 @@ class ReviewAlarmApp:
             )
             btn.pack(side="left", padx=5)
 
- #改show_analytics方法
-    def show_analytics(self):
-        """显示统计分析界面"""
-        self.clear_content_frame()
-
-        try:
-            # 导入统计界面
-            from analytics.ui import AnalyticsFrame
-
-            analytics_frame = AnalyticsFrame(
-                self.content_frame,
-                self.current_user,
-                self.db_manager
-            )
-            analytics_frame.pack(fill="both", expand=True, padx=10, pady=10)
-
-        except ImportError as e:
-            print(f"统计模块导入失败: {e}")
-            # 备用占位符
-            placeholder = ctk.CTkLabel(
-                self.content_frame,
-                text="学习统计界面\n(模块加载失败)",
-                font=ctk.CTkFont(size=20, weight="bold"),
-            )
-            placeholder.pack(expand=True)
-            #362-385
     def show_settings(self):
         """显示设置界面"""
         self.clear_content_frame()
