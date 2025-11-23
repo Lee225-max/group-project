@@ -36,7 +36,8 @@ def main():
         required_modules = [
             'src.database.manager',
             'src.auth.ui', 
-            'src.knowledge.ui'
+            'src.knowledge.ui',
+            "src.frontend_ui_main_window"#新增调用
         ]
         
         for module in required_modules:
@@ -81,6 +82,7 @@ def main():
             'src/auth/ui.py',
             'src/knowledge/ui.py', 
             'src/app.py'
+
         ]
         
         print("\n文件状态检查: - run_app.py:86")
