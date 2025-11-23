@@ -88,6 +88,8 @@ class KnowledgeService:
         finally:
             session.close()
 
+
+
     def update_knowledge_item(self, item_id, title=None, content=None, category=None):
         """更新知识点"""
         session = self.db_manager.get_session()
