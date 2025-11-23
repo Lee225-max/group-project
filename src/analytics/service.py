@@ -14,7 +14,7 @@ from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Any, Dict, List
 
-import matplotlib
+#import matplotlib
 
 #matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.font_manager as fm
