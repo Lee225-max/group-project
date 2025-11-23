@@ -1,5 +1,5 @@
 """
-知识管理界面 - 成员B负责 + 今日复习联动功能
+知识管理界面 - 美化版 + 今日复习联动功能
 """
 
 import customtkinter as ctk
@@ -17,63 +17,103 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         self.db_manager = db_manager
         self.show_only_today = False  # 今日复习筛选状态
 
+        # 颜色配置
+        self.colors = {
+            'primary': '#2E86AB',
+            'secondary': '#A23B72',
+            'success': '#18A999',
+            'warning': '#F18F01',
+            'danger': '#C73E1D',
+            'light': '#F8F9FA',
+            'dark': '#212529',
+            'today': '#FF6B6B',
+            'completed': '#4ECDC4'
+        }
+
         self.create_widgets()
         self.load_knowledge_items()
         self.update_today_review_count()
 
     def create_widgets(self):
-        """创建界面组件"""
-        # 顶部工具栏
-        toolbar = ctk.CTkFrame(self)
-        toolbar.pack(fill="x", padx=10, pady=10)
+        """创建界面组件 - 纵向紧凑布局"""
+        # 配置网格布局
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(1, weight=1)
 
-        ctk.CTkLabel(
-            toolbar, text="知识管理", font=ctk.CTkFont(size=20, weight="bold")
-        ).pack(side="left")
+        # 主控制栏（包含所有控制元素）
+        control_frame = ctk.CTkFrame(self, fg_color=self.colors['light'], corner_radius=10)
+        control_frame.grid(row=0, column=0, sticky="ew", padx=8, pady=5)
+        control_frame.grid_columnconfigure(1, weight=1)
 
-        # 今日复习状态栏
-        self.stats_frame = ctk.CTkFrame(toolbar, fg_color="transparent")
-        self.stats_frame.pack(side="left", fill="x", expand=True, padx=20)
+        # 第一行：标题和主要按钮
+        header_frame = ctk.CTkFrame(control_frame, fg_color="transparent")
+        header_frame.grid(row=0, column=0, columnspan=3, sticky="ew", padx=10, pady=5)
+        header_frame.grid_columnconfigure(1, weight=1)
 
-        self.today_review_label = ctk.CTkLabel(
-            self.stats_frame,
-            text="今日需复习：加载中...",
-            font=ctk.CTkFont(size=12),
-            text_color="#FF6B6B"
+        # 标题
+        title_label = ctk.CTkLabel(
+            header_frame,
+            text="📚 知识管理",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=self.colors['primary']
         )
-        self.today_review_label.pack(side="left", padx=(10, 5))
+        title_label.grid(row=0, column=0, sticky="w")
+
+        # 今日复习状态
+        self.today_review_label = ctk.CTkLabel(
+            header_frame,
+            text="今日需复习：加载中...",
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color=self.colors['dark']
+        )
+        self.today_review_label.grid(row=0, column=1, sticky="w", padx=15)
+
+        # 添加知识点按钮
+        add_btn = ctk.CTkButton(
+            header_frame,
+            text="➕ 添加",
+            command=self.add_knowledge_item,
+            width=70,
+            height=26,
+            fg_color=self.colors['success'],
+            hover_color='#139C8B',
+            font=ctk.CTkFont(size=10, weight="bold")
+        )
+        add_btn.grid(row=0, column=2, sticky="e")
+
+        # 第二行：搜索和筛选
+        action_frame = ctk.CTkFrame(control_frame, fg_color="transparent")
+        action_frame.grid(row=1, column=0, columnspan=3, sticky="ew", padx=10, pady=(0, 5))
+        action_frame.grid_columnconfigure(0, weight=1)
+
+        # 搜索框
+        self.search_entry = ctk.CTkEntry(
+            action_frame,
+            placeholder_text="🔍 搜索知识点...",
+            height=30,
+            font=ctk.CTkFont(size=11)
+        )
+        self.search_entry.grid(row=0, column=0, sticky="ew")
+        self.search_entry.bind("<KeyRelease>", self.on_search)
 
         # 筛选按钮
         self.filter_today_btn = ctk.CTkButton(
-            self.stats_frame,
-            text="筛选今日复习",
+            action_frame,
+            text="📅 筛选今日",
             command=self.toggle_today_filter,
-            width=100,
-            height=28,
-            fg_color="#4ECDC4",
-            hover_color="#45B7B0"
+            width=70,
+            height=26,
+            fg_color=self.colors['primary'],
+            hover_color='#1B6B93',
+            font=ctk.CTkFont(size=10, weight="bold")
         )
-        self.filter_today_btn.pack(side="left", padx=5)
+        self.filter_today_btn.grid(row=0, column=1, sticky="e", padx=(10, 0))
 
-        ctk.CTkButton(
-            toolbar, text="+ 添加知识点", command=self.add_knowledge_item
-        ).pack(side="right", padx=5)
-
-        # 搜索框
-        search_frame = ctk.CTkFrame(self)
-        search_frame.pack(fill="x", padx=10, pady=5)
-
-        self.search_entry = ctk.CTkEntry(search_frame, placeholder_text="搜索知识点...")
-        self.search_entry.pack(side="left", fill="x", expand=True, padx=(0, 5))
-        self.search_entry.bind("<KeyRelease>", self.on_search)
-
-        ctk.CTkButton(search_frame, text="搜索", width=80, command=self.on_search).pack(
-            side="right"
-        )
-
-        # 知识列表容器
-        self.list_container = ctk.CTkFrame(self)
-        self.list_container.pack(fill="both", expand=True, padx=10, pady=10)
+        # 知识列表容器 - 紧贴控制栏
+        self.list_container = ctk.CTkFrame(self, corner_radius=10)
+        self.list_container.grid(row=1, column=0, sticky="nsew", padx=8, pady=(0, 8))
+        self.list_container.grid_columnconfigure(0, weight=1)
+        self.list_container.grid_rowconfigure(0, weight=1)
 
         # 创建列表框架
         self.create_list_frame()
@@ -84,24 +124,14 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         for widget in self.list_container.winfo_children():
             widget.destroy()
 
-        # 列表框架
-        list_frame = ctk.CTkFrame(self.list_container)
-        list_frame.pack(fill="both", expand=True)
-
-        # 列表头部
-        header = ctk.CTkFrame(list_frame)
-        header.pack(fill="x", padx=5, pady=5)
-
-        headers = ["标题", "分类", "复习状态", "创建时间", "操作"]
-        widths = [250, 120, 150, 120, 200]
-
-        for i, (text, width) in enumerate(zip(headers, widths)):
-            label = ctk.CTkLabel(header, text=text, width=width)
-            label.pack(side="left")
-
         # 滚动框架
-        self.scrollable_frame = ctk.CTkScrollableFrame(list_frame)
-        self.scrollable_frame.pack(fill="both", expand=True)
+        self.scrollable_frame = ctk.CTkScrollableFrame(
+            self.list_container,
+            fg_color=self.colors['light'],
+            corner_radius=12
+        )
+        self.scrollable_frame.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
+        self.scrollable_frame.grid_columnconfigure(0, weight=1)
 
     def toggle_today_filter(self):
         """切换今日复习筛选"""
@@ -109,20 +139,20 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             # 取消筛选
             self.show_only_today = False
             self.filter_today_btn.configure(
-                text="筛选今日复习",
-                fg_color="#4ECDC4",
-                hover_color="#45B7B0"
+                text="📅 筛选今日",
+                fg_color=self.colors['primary'],
+                hover_color='#1B6B93'
             )
             self.update_today_review_count()
         else:
             # 应用筛选
             self.show_only_today = True
             self.filter_today_btn.configure(
-                text="取消筛选",
-                fg_color="#FF6B6B",
-                hover_color="#FF5252"
+                text="❌ 取消筛选",
+                fg_color=self.colors['warning'],
+                hover_color='#D97B00'
             )
-            self.today_review_label.configure(text="正在显示今日复习")
+            self.today_review_label.configure(text="🎯 正在显示今日复习")
 
         self.load_knowledge_items()
 
@@ -130,52 +160,54 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         """更新今日复习计数"""
         try:
             today_count = self.db_manager.get_today_review_count(self.current_user.id)
-            overdue_count = self.db_manager.get_overdue_reviews_count(
-                self.current_user.id)
+            overdue_count = self.db_manager.get_overdue_reviews_count(self.current_user.id)
 
             if overdue_count > 0:
                 self.today_review_label.configure(
-                    text=f"今日需复习：{today_count}项（{overdue_count}项逾期）",
-                    text_color="#FF5252"
+                    text=f"⚠️ 今日需复习：{today_count}项（{overdue_count}项逾期）",
+                    text_color=self.colors['danger']
+                )
+            elif today_count > 0:
+                self.today_review_label.configure(
+                    text=f"📖 今日需复习：{today_count}项",
+                    text_color=self.colors['primary']
                 )
             else:
                 self.today_review_label.configure(
-                    text=f"今日需复习：{today_count}项",
-                    text_color="#FF6B6B" if today_count > 0 else "#888888"
+                    text="🎉 今日无复习任务",
+                    text_color=self.colors['success']
                 )
         except Exception as e:
-            print(f"更新今日复习计数失败: {e} - ui.py:147")
-            self.today_review_label.configure(text="今日需复习：加载失败")
+            print(f"更新今日复习计数失败: {e} - ui.py:181")
+            self.today_review_label.configure(
+                text="❌ 加载失败",
+                text_color=self.colors['danger']
+            )
 
     def load_knowledge_items(self, items=None):
         """加载知识项列表 - 支持今日复习筛选"""
-        print("🔄 开始加载知识点列表... - ui.py:152")
+        print("🔄 开始加载知识点列表... - ui.py:189")
 
         # 更新今日复习计数（如果不是筛选模式）
         if not self.show_only_today:
             self.update_today_review_count()
 
         if items is None:
-            print("📝 从数据库查询知识点... - ui.py:159")
+            print("📝 从数据库查询知识点... - ui.py:196")
             try:
-                # 使用新的方法获取包含复习状态的知识点
                 items = self.knowledge_service.get_user_knowledge(self.current_user.id)
-                # 确保所有项目都是字典格式
                 items = [self._ensure_dict_format(item) for item in items]
             except Exception as e:
-                print(f"❌ 获取知识点失败: {e}，回退到基本方法 - ui.py:166")
-                # 回退到基本方法
-                items = self.knowledge_service.get_user_knowledge_items(
-                    self.current_user.id)
-                # 将数据库对象转换为字典格式
+                print(f"❌ 获取知识点失败: {e}，回退到基本方法 - ui.py:201")
+                items = self.knowledge_service.get_user_knowledge_items(self.current_user.id)
                 items = [self._convert_to_dict(item) for item in items]
 
         # 应用今日复习筛选
         if self.show_only_today:
             items = [item for item in items if item.get('is_today_review', False)]
-            print(f"📅 筛选后今日复习知识点: {len(items)}项 - ui.py:176")
+            print(f"📅 筛选后今日复习知识点: {len(items)}项 - ui.py:208")
 
-        print(f"📊 获取到 {len(items)} 个知识点 - ui.py:178")
+        print(f"📊 获取到 {len(items)} 个知识点 - ui.py:210")
 
         # 清空现有内容
         for widget in self.scrollable_frame.winfo_children():
@@ -183,41 +215,206 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
 
         if not items:
             # 显示空状态
-            print("📭 没有知识点，显示空状态 - ui.py:186")
-            empty_text = "暂无知识点，点击\"添加知识点\"开始创建"
+            empty_text = "📝 暂无知识点\n点击\"添加知识点\"开始创建您的知识库"
             if self.show_only_today:
-                empty_text = "今日暂无复习计划\n所有知识点都已复习完成！🎉"
+                empty_text = "🎉 太棒了！\n所有今日复习任务已完成！"
+
+            empty_frame = ctk.CTkFrame(
+                self.scrollable_frame,
+                fg_color="transparent",
+                corner_radius=12
+            )
+            empty_frame.grid(row=0, column=0, sticky="nsew", pady=50)
+            empty_frame.grid_columnconfigure(0, weight=1)
 
             empty_label = ctk.CTkLabel(
-                self.scrollable_frame,
+                empty_frame,
                 text=empty_text,
                 font=ctk.CTkFont(size=16),
+                text_color=self.colors['dark']
             )
-            empty_label.pack(pady=50)
+            empty_label.grid(row=0, column=0, pady=10)
             return
 
-        print(f"🎯 创建 {len(items)} 个知识点行 - ui.py:199")
-        for item in items:
-            self.create_item_row(item)
-        print("✅ 知识点列表加载完成 - ui.py:202")
+        print(f"🎯 创建 {len(items)} 个知识点卡片 - ui.py:239")
+        for i, item in enumerate(items):
+            self.create_knowledge_card(item, i)
+
+    def create_knowledge_card(self, item, index):
+        """创建美观的知识卡片"""
+        item = self._ensure_dict_format(item)
+        is_today_review = item.get('is_today_review', False)
+        is_urgent = item.get('is_urgent', False)
+
+        # 卡片框架
+        card = ctk.CTkFrame(
+            self.scrollable_frame,
+            fg_color="white",
+            border_color=self.colors['today'] if is_today_review else "#E0E0E0",
+            border_width=2 if is_today_review else 1,
+            corner_radius=12
+        )
+        card.grid(row=index, column=0, sticky="ew", padx=10, pady=8)
+        card.grid_columnconfigure(1, weight=1)
+
+        # 紧急状态指示器
+        if is_urgent:
+            urgency_indicator = ctk.CTkFrame(
+                card,
+                fg_color=self.colors['danger'],
+                width=6,
+                corner_radius=3
+            )
+            urgency_indicator.grid(row=0, column=0, rowspan=3, sticky="ns", padx=(10, 5), pady=10)
+
+        # 内容区域
+        content_frame = ctk.CTkFrame(card, fg_color="transparent")
+        content_frame.grid(row=0, column=1, sticky="ew", padx=10, pady=12)
+        content_frame.grid_columnconfigure(0, weight=1)
+
+        # 标题和状态
+        title_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
+        title_frame.grid(row=0, column=0, sticky="ew", pady=(0, 8))
+        title_frame.grid_columnconfigure(0, weight=1)
+
+        title_label = ctk.CTkLabel(
+            title_frame,
+            text=f"📖 {item.get('title', '无标题')}",
+            font=ctk.CTkFont(size=16, weight="bold"),
+            text_color=self.colors['dark'],
+            anchor="w"
+        )
+        title_label.grid(row=0, column=0, sticky="w")
+
+        # 状态标签
+        status_text = item.get('review_status', '未知状态')
+        status_color = self.colors['today'] if is_today_review else self.colors['primary']
+        
+        status_label = ctk.CTkLabel(
+            title_frame,
+            text=status_text,
+            font=ctk.CTkFont(size=11, weight="bold"),
+            text_color="white",
+            fg_color=status_color,
+            corner_radius=8,
+            padx=8,
+            pady=2
+        )
+        status_label.grid(row=0, column=1, sticky="e", padx=(10, 0))
+
+        # 元信息
+        meta_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
+        meta_frame.grid(row=1, column=0, sticky="ew", pady=(0, 10))
+
+        # 分类
+        if item.get('category'):
+            category_label = ctk.CTkLabel(
+                meta_frame,
+                text=f"🏷️ {item.get('category')}",
+                font=ctk.CTkFont(size=12),
+                text_color=self.colors['secondary']
+            )
+            category_label.grid(row=0, column=0, sticky="w")
+
+        # 时间信息
+        time_label = ctk.CTkLabel(
+            meta_frame,
+            text=f"⏰ {item.get('created_at', '未知时间')}",
+            font=ctk.CTkFont(size=11),
+            text_color="#666666"
+        )
+        time_label.grid(row=0, column=1, sticky="w", padx=(20, 0))
+
+        # 内容预览
+        content_preview = item.get('content', '')
+        if content_preview:
+            if len(content_preview) > 120:
+                content_preview = content_preview[:120] + "..."
+            
+            content_label = ctk.CTkLabel(
+                content_frame,
+                text=content_preview,
+                font=ctk.CTkFont(size=12),
+                text_color="#555555",
+                wraplength=400,
+                justify="left"
+            )
+            content_label.grid(row=2, column=0, sticky="w", pady=(0, 12))
+
+        # 操作按钮区域
+        button_frame = ctk.CTkFrame(content_frame, fg_color="transparent")
+        button_frame.grid(row=3, column=0, sticky="ew")
+
+        # 按钮样式
+        btn_style = {
+            'width': 80,
+            'height': 30,
+            'font': ctk.CTkFont(size=11, weight="bold"),
+            'corner_radius': 8
+        }
+
+        # 编辑按钮
+        edit_btn = ctk.CTkButton(
+            button_frame,
+            text="✏️ 编辑",
+            command=lambda: self.edit_item(item),
+            fg_color=self.colors['primary'],
+            hover_color='#1B6B93',
+            **btn_style
+        )
+        edit_btn.pack(side="left", padx=(0, 8))
+
+        # 删除按钮
+        delete_btn = ctk.CTkButton(
+            button_frame,
+            text="🗑️ 删除",
+            command=lambda: self.delete_item(item),
+            fg_color=self.colors['danger'],
+            hover_color='#A63225',
+            **btn_style
+        )
+        delete_btn.pack(side="left", padx=(0, 8))
+
+        # 复习按钮
+        review_text = "📚 复习" if not is_today_review else "🎯 立即复习"
+        review_color = self.colors['success'] if not is_today_review else self.colors['today']
+        review_hover = '#139C8B' if not is_today_review else '#E55A4D'
+        
+        review_btn = ctk.CTkButton(
+            button_frame,
+            text=review_text,
+            command=lambda: self.review_item(item),
+            fg_color=review_color,
+            hover_color=review_hover,
+            **btn_style
+        )
+        review_btn.pack(side="left", padx=(0, 8))
+
+        # 加入今日复习按钮（针对非今日复习的知识点）
+        if not is_today_review:
+            add_today_btn = ctk.CTkButton(
+                button_frame,
+                text="⭐ 加入今日",
+                command=lambda: self.add_to_today_review(item),
+                fg_color=self.colors['warning'],
+                hover_color='#D97B00',
+                text_color="white",
+                **btn_style
+            )
+            add_today_btn.pack(side="left")
 
     def _ensure_dict_format(self, item):
         """确保项目是字典格式"""
         if hasattr(item, 'get'):
-            # 已经是字典
             return item
         else:
-            # 转换为字典
             return self._convert_to_dict(item)
 
     def _convert_to_dict(self, item):
         """将数据库对象转换为字典格式"""
-
         if hasattr(item, 'get'):
-            # 已经是字典，直接返回
             return item
 
-        # 从数据库对象转换为字典
         result = {
             'id': getattr(item, 'id', ''),
             'title': getattr(item, 'title', '无标题'),
@@ -225,160 +422,53 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             'content': getattr(item, 'content', ''),
             'created_at': getattr(item, 'created_at', '未知时间'),
             'review_status': '⏳ 状态未知',
-            'is_today_review': False
+            'is_today_review': False,
+            'is_urgent': False
         }
 
-        # 处理日期格式
         if hasattr(item, 'created_at') and hasattr(item.created_at, 'strftime'):
-            result['created_at'] = item.created_at.strftime("%Y-%m-%d")
+            result['created_at'] = item.created_at.strftime("%Y-%m-%d %H:%M")
 
         return result
-
-    def create_item_row(self, item):
-        """创建知识项行 - 支持今日复习样式"""
-        # 确保使用字典访问方式
-        item = self._ensure_dict_format(item)
-
-        row = ctk.CTkFrame(self.scrollable_frame)
-        row.pack(fill="x", padx=5, pady=2)
-
-        # 如果是今日复习，添加特殊样式
-        is_today_review = item.get('is_today_review', False)
-        if is_today_review:
-            row.configure(border_color="#FF6B6B", border_width=2)
-
-        # 标题（可点击查看详情）
-        title_frame = ctk.CTkFrame(row, fg_color="transparent", width=250)
-        title_frame.pack(side="left")
-        title_frame.pack_propagate(False)
-
-        # 今日复习图标
-        if is_today_review:
-            icon_label = ctk.CTkLabel(
-                title_frame,
-                text="📅 ",
-                font=ctk.CTkFont(size=12)
-            )
-            icon_label.pack(side="left")
-
-        title_label = ctk.CTkLabel(
-            title_frame, text=item.get(
-                'title', '无标题'), anchor="w")
-        title_label.pack(side="left", fill="x", expand=True)
-        title_label.bind("<Button-1>", lambda e, item=item: self.view_item_detail(item))
-
-        # 分类
-        category_label = ctk.CTkLabel(
-            row, text=item.get('category', '未分类') or "未分类", width=120, anchor="w"
-        )
-        category_label.pack(side="left")
-
-        # 复习状态
-        status_label = ctk.CTkLabel(
-            row,
-            text=item.get('review_status', '未知状态'),
-            width=150,
-            anchor="w",
-            text_color="#4ECDC4" if is_today_review else "#888888"
-        )
-        status_label.pack(side="left")
-
-        # 创建时间
-        time_label = ctk.CTkLabel(
-            row, text=item.get('created_at', '未知时间'), width=120, anchor="w"
-        )
-        time_label.pack(side="left")
-
-        # 操作按钮
-        btn_frame = ctk.CTkFrame(row, width=200)
-        btn_frame.pack(side="left")
-        btn_frame.pack_propagate(False)
-
-        ctk.CTkButton(
-            btn_frame,
-            text="编辑",
-            width=45,
-            height=25,
-            command=lambda: self.edit_item(item),
-        ).pack(side="left", padx=2)
-
-        ctk.CTkButton(
-            btn_frame,
-            text="删除",
-            width=45,
-            height=25,
-            fg_color="#d9534f",
-            hover_color="#c9302c",
-            command=lambda: self.delete_item(item),
-        ).pack(side="left", padx=2)
-
-        # 复习按钮 - 使用不同的颜色标识今日复习
-        review_btn = ctk.CTkButton(
-            btn_frame,
-            text="复习",
-            width=45,
-            height=25,
-            fg_color="#5cb85c" if not is_today_review else "#FF6B6B",
-            hover_color="#4cae4c" if not is_today_review else "#FF5252",
-            command=lambda: self.review_item(item),
-        )
-        review_btn.pack(side="left", padx=2)
-
-        # 加入今日复习按钮（针对非今日复习的知识点）
-        if not is_today_review:
-            add_review_btn = ctk.CTkButton(
-                btn_frame,
-                text="加入今日",
-                width=50,
-                height=25,
-                fg_color="#FFD93D",
-                hover_color="#FFC800",
-                text_color="#000000",
-                command=lambda: self.add_to_today_review(item)
-            )
-            add_review_btn.pack(side="left", padx=2)
 
     def add_to_today_review(self, item):
         """手动将知识点加入今日复习"""
         try:
             item = self._ensure_dict_format(item)
-            print(f"📅 将知识点 '{item.get('title', '无标题')}' 加入今日复习 - ui.py:345")
+            print(f"📅 将知识点 '{item.get('title', '无标题')}' 加入今日复习 - ui.py:438")
 
-            # 调用数据库管理器的方法
-            result = self.db_manager.add_to_today_review(
-                item['id'], self.current_user.id)
+            result = self.db_manager.add_to_today_review(item['id'], self.current_user.id)
 
             if result["success"]:
                 messagebox.showinfo(
-                    "成功", f"已将知识点 '{item.get('title', '无标题')}' 加入今日复习计划")
-                # 刷新列表
+                    "成功", 
+                    f"✅ 已将知识点 '{item.get('title', '无标题')}' 加入今日复习计划",
+                    icon="info"
+                )
                 self.load_knowledge_items()
             else:
                 messagebox.showerror("错误", result["msg"])
 
         except Exception as e:
-            print(f"❌ 加入今日复习失败: {e} - ui.py:360")
+            print(f"❌ 加入今日复习失败: {e} - ui.py:453")
             messagebox.showerror("错误", f"加入今日复习失败: {e}")
 
     def add_knowledge_item(self):
         """添加知识点"""
-        print("📝 打开添加知识点对话框... - ui.py:365")
-        # 打开添加对话框
+        print("📝 打开添加知识点对话框... - ui.py:458")
         KnowledgeItemDialog(
             self,
             self.current_user,
             self.knowledge_service,
             self.load_knowledge_items,
-            None  # 没有item表示添加模式
+            None
         )
 
     def edit_item(self, item):
         """编辑知识点"""
         item = self._ensure_dict_format(item)
-        print(f"✏️ 打开编辑知识点对话框: {item.get('title', '无标题')} - ui.py:378")
-        print(f"回调函数: {self.load_knowledge_items} - ui.py:379")
+        print(f"✏️ 打开编辑知识点对话框: {item.get('title', '无标题')} - ui.py:470")
 
-        # 需要将字典项转换为适当的对象格式
         class AdaptedItem:
             def __init__(self, item_dict):
                 self.id = item_dict['id']
@@ -400,15 +490,14 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         """删除知识点"""
         item = self._ensure_dict_format(item)
         title = item.get('title', '无标题')
-        if messagebox.askyesno("确认删除", f"确定要删除知识点 '{title}' 吗？"):
+        if messagebox.askyesno(
+            "确认删除", 
+            f"确定要删除知识点 '{title}' 吗？\n此操作不可恢复！",
+            icon="warning"
+        ):
             if self.knowledge_service.delete_knowledge_item(item['id']):
                 self.load_knowledge_items()
-                messagebox.showinfo("成功", "知识点已删除")
-
-    def view_item_detail(self, item):
-        """查看知识点详情"""
-        item = self._ensure_dict_format(item)
-        KnowledgeItemDetailDialog(self, item)
+                messagebox.showinfo("成功", "✅ 知识点已删除")
 
     def review_item(self, item):
         """复习知识点"""
@@ -416,17 +505,15 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             from src.scheduler.ui import ReviewDialog
 
             item = self._ensure_dict_format(item)
-            print(f"🔍 调试  知识点对象类型: {type(item)} - ui.py:419")
-            print(f"🔍 调试  知识点ID: {item.get('id', 'No id attribute')} - ui.py:420")
+            print(f"🔍 调试 知识点对象类型: {type(item)} - ui.py:508")
+            print(f"🔍 调试 知识点ID: {item.get('id', 'No id attribute')} - ui.py:509")
 
-            # 创建一个适配器对象
             class AdaptedItem:
                 def __init__(self, item_dict):
                     self.knowledge_item_id = item_dict['id']
                     self.title = item_dict.get('title', '无标题')
                     self.content = item_dict.get('content', '')
                     self.category = item_dict.get('category')
-                    # 复制所有其他属性
                     for key, value in item_dict.items():
                         setattr(self, key, value)
 
@@ -443,43 +530,37 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             messagebox.showinfo("提示", "复习模块尚未实现")
         except Exception as e:
             messagebox.showerror("错误", f"打开复习对话框失败: {str(e)}")
-            print(f"详细错误信息: {e} - ui.py:446")
+            print(f"详细错误信息: {e} - ui.py:533")
 
     def on_search(self, event=None):
         """搜索功能"""
         search_term = self.search_entry.get().strip()
-        print(f"🔍 执行搜索: '{search_term}'  用户ID: {self.current_user.id} - ui.py:451")
+        print(f"🔍 执行搜索: '{search_term}' 用户ID: {self.current_user.id} - ui.py:538")
 
         try:
             if search_term:
-                print("📝 调用搜索服务... - ui.py:455")
-                # 使用新的搜索方法
+                print("📝 调用搜索服务... - ui.py:542")
                 items = self.knowledge_service.search_knowledge_items(
                     self.current_user.id, search_term
                 )
-                print(f"📊 搜索返回 {len(items)} 个结果 - ui.py:460")
+                print(f"📊 搜索返回 {len(items)} 个结果 - ui.py:546")
 
-                # 将搜索结果转换为字典格式
                 items = [self._convert_to_dict(item) for item in items]
 
-                # 应用今日复习筛选（如果启用）
                 if self.show_only_today:
-                    items = [
-                        item for item in items if item.get(
-                            'is_today_review', False)]
+                    items = [item for item in items if item.get('is_today_review', False)]
 
                 self.load_knowledge_items(items)
             else:
-                print("🔄 搜索词为空，显示所有知识点 - ui.py:473")
+                print("🔄 搜索词为空，显示所有知识点 - ui.py:555")
                 self.load_knowledge_items()
         except Exception as e:
-            print(f"❌ 搜索过程中出错: {e} - ui.py:476")
+            print(f"❌ 搜索过程中出错: {e} - ui.py:558")
             messagebox.showerror("错误", f"搜索失败: {str(e)}")
 
 
 class KnowledgeItemDialog(ctk.CTkToplevel):
-    """知识点编辑对话框"""
-
+    """知识点编辑对话框 """
     def __init__(self, parent, user, knowledge_service, callback, item=None):
         super().__init__(parent)
         self.user = user
@@ -487,52 +568,143 @@ class KnowledgeItemDialog(ctk.CTkToplevel):
         self.callback = callback
         self.item = item
 
-        self.title("编辑知识点" if item else "添加知识点")
-        self.geometry("600x500")
-        self.resizable(False, False)
+        # 颜色配置
+        self.colors = {
+            'primary': '#2E86AB',
+            'success': '#18A999',
+            'light': '#F8F9FA',
+            'dark': '#212529'
+        }
+
+        self.title("✏️ 编辑知识点" if item else "➕ 添加知识点")
+        self.geometry("700x600")
+        self.resizable(True, True)
+
+        # 关键修复：设置对话框属性
+        self.configure(fg_color="white")  # 设置对话框背景色
+        self.transient(parent)  # 设置为主窗口的子窗口
+        self.grab_set()  # 设置为模态对话框，阻止主窗口操作
+        self.focus_set()  # 获取焦点
+
+        # 绑定窗口关闭事件
+        self.protocol("WM_DELETE_WINDOW", self.on_close)
 
         self.create_widgets()
         self.center_window()
 
+    def on_close(self):
+        """窗口关闭时的处理"""
+        self.grab_release()  # 释放模态
+        self.destroy()
+
     def center_window(self):
         """居中显示窗口"""
         self.update_idletasks()
-        width = self.winfo_width()
-        height = self.winfo_height()
+        width = 700
+        height = 600
         x = (self.winfo_screenwidth() // 2) - (width // 2)
         y = (self.winfo_screenheight() // 2) - (height // 2)
-        self.geometry(f"+{x}+{y}")
+        self.geometry(f"{width}x{height}+{x}+{y}")
 
     def create_widgets(self):
         """创建对话框组件"""
         # 主容器
-        main_container = ctk.CTkFrame(self)
+        main_container = ctk.CTkFrame(self, fg_color=self.colors['light'], corner_radius=15)
         main_container.pack(fill="both", expand=True, padx=20, pady=20)
 
         # 标题
-        ctk.CTkLabel(main_container, text="标题:").pack(anchor="w", pady=(0, 5))
-        self.title_entry = ctk.CTkEntry(main_container, height=35)
-        self.title_entry.pack(fill="x", pady=(0, 15))
+        title_text = "编辑知识点" if self.item else "创建新知识点"
+        title_label = ctk.CTkLabel(
+            main_container,
+            text=title_text,
+            font=ctk.CTkFont(size=20, weight="bold"),
+            text_color=self.colors['dark']
+        )
+        title_label.pack(anchor="w", pady=(20, 20), padx=20)
 
-        # 分类
-        ctk.CTkLabel(main_container, text="分类:").pack(anchor="w", pady=(0, 5))
-        self.category_entry = ctk.CTkEntry(main_container, height=35)
-        self.category_entry.pack(fill="x", pady=(0, 15))
+        # 表单容器
+        form_container = ctk.CTkFrame(main_container, fg_color="white", corner_radius=12)
+        form_container.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+        form_container.grid_columnconfigure(0, weight=1)
 
-        # 内容
-        ctk.CTkLabel(main_container, text="内容:").pack(anchor="w", pady=(0, 5))
-        self.content_text = ctk.CTkTextbox(main_container, height=200)
-        self.content_text.pack(fill="both", expand=True, pady=(0, 20))
+        # 标题输入
+        ctk.CTkLabel(
+            form_container,
+            text="📝 标题",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color=self.colors['dark']
+        ).grid(row=0, column=0, sticky="w", padx=20, pady=(20, 8))
+
+        self.title_entry = ctk.CTkEntry(
+            form_container,
+            height=45,
+            font=ctk.CTkFont(size=13),
+            placeholder_text="输入知识点标题..."
+        )
+        self.title_entry.grid(row=1, column=0, sticky="ew", padx=20, pady=(0, 20))
+
+        # 分类输入
+        ctk.CTkLabel(
+            form_container,
+            text="🏷️ 分类",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color=self.colors['dark']
+        ).grid(row=2, column=0, sticky="w", padx=20, pady=(0, 8))
+
+        self.category_entry = ctk.CTkEntry(
+            form_container,
+            height=45,
+            font=ctk.CTkFont(size=13),
+            placeholder_text="输入分类标签（可选）..."
+        )
+        self.category_entry.grid(row=3, column=0, sticky="ew", padx=20, pady=(0, 20))
+
+        # 内容输入
+        ctk.CTkLabel(
+            form_container,
+            text="📄 内容",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color=self.colors['dark']
+        ).grid(row=4, column=0, sticky="w", padx=20, pady=(0, 8))
+
+        self.content_text = ctk.CTkTextbox(
+            form_container,
+            font=ctk.CTkFont(size=13),
+            border_width=1,
+            border_color="#E0E0E0"
+        )
+        self.content_text.grid(row=5, column=0, sticky="nsew", padx=20, pady=(0, 20))
+        form_container.grid_rowconfigure(5, weight=1)
 
         # 按钮框架
-        button_frame = ctk.CTkFrame(main_container, fg_color="transparent")
-        button_frame.pack(fill="x")
+        button_frame = ctk.CTkFrame(form_container, fg_color="transparent")
+        button_frame.grid(row=6, column=0, sticky="ew", padx=20, pady=20)
+        button_frame.grid_columnconfigure(0, weight=1)
+        button_frame.grid_columnconfigure(1, weight=1)
 
-        ctk.CTkButton(button_frame, text="保存", command=self.save).pack(
-            side="left", padx=(0, 10)
+        # 保存按钮
+        save_btn = ctk.CTkButton(
+            button_frame,
+            text="💾 保存",
+            command=self.save,
+            height=40,
+            fg_color=self.colors['success'],
+            hover_color='#139C8B',
+            font=ctk.CTkFont(size=14, weight="bold")
         )
+        save_btn.grid(row=0, column=0, padx=(0, 10))
 
-        ctk.CTkButton(button_frame, text="取消", command=self.destroy).pack(side="left")
+        # 取消按钮
+        cancel_btn = ctk.CTkButton(
+            button_frame,
+            text="❌ 取消",
+            command=self.destroy,
+            height=40,
+            fg_color="#6C757D",
+            hover_color="#5A6268",
+            font=ctk.CTkFont(size=14)
+        )
+        cancel_btn.grid(row=0, column=1, padx=(10, 0))
 
         # 如果是编辑模式，填充数据
         if self.item:
@@ -546,8 +718,11 @@ class KnowledgeItemDialog(ctk.CTkToplevel):
         category = self.category_entry.get().strip() or None
         content = self.content_text.get("1.0", "end-1c").strip()
 
-        if not title or not content:
-            messagebox.showerror("错误", "请填写标题和内容")
+        if not title:
+            messagebox.showerror("错误", "❌ 请填写标题")
+            return
+        if not content:
+            messagebox.showerror("错误", "❌ 请填写内容")
             return
 
         try:
@@ -556,43 +731,46 @@ class KnowledgeItemDialog(ctk.CTkToplevel):
                 self.knowledge_service.update_knowledge_item(
                     self.item.id, title=title, category=category, content=content
                 )
-                print(f"✅ 知识点更新成功: {title} - ui.py:559")
+                print(f"✅ 知识点更新成功: {title} - ui.py:734")
             else:
                 # 添加新知识点
                 self.knowledge_service.add_knowledge_item(
                     self.user.id, title, content, category
                 )
-                print(f"✅ 知识点创建成功: {title} - ui.py:565")
+                print(f"✅ 知识点创建成功: {title} - ui.py:740")
 
-            print("🔄 准备调用回调函数刷新列表... - ui.py:567")
-            print(f"回调函数: {self.callback} - ui.py:568")
-
-            # 关键修复：确保回调函数被调用
+            # 调用回调函数刷新列表
             if self.callback:
-                # 立即调用回调函数
                 self.callback()
-                print("🔄 回调函数已调用 - ui.py:574")
-            else:
-                print("⚠️ 回调函数不存在，无法刷新列表 - ui.py:576")
+                print("🔄 回调函数已调用 - ui.py:745")
 
-            # 先显示成功消息，再关闭对话框
-            messagebox.showinfo("成功", "知识点已保存")
+            messagebox.showinfo("成功", "✅ 知识点已保存")
             self.destroy()
 
         except Exception as e:
             messagebox.showerror("错误", f"保存失败: {str(e)}")
-            print(f"❌ 保存失败: {e} - ui.py:584")
+            print(f"❌ 保存失败: {e} - ui.py:752")
 
 
 class KnowledgeItemDetailDialog(ctk.CTkToplevel):
-    """知识点详情对话框"""
+    """知识点详情对话框 - 美化版"""
 
     def __init__(self, parent, item):
         super().__init__(parent)
         self.item = item
 
-        self.title(f"知识点详情: {item.get('title', '无标题')}")
-        self.geometry("500x400")
+        # 颜色配置
+        self.colors = {
+            'primary': '#2E86AB',
+            'success': '#18A999',
+            'warning': '#F18F01',
+            'light': '#F8F9FA',
+            'dark': '#212529'
+        }
+
+        self.title(f"📖 知识点详情: {item.get('title', '无标题')}")
+        self.geometry("600x500")
+        self.resizable(False, False)
 
         self.create_widgets()
         self.center_window()
@@ -600,62 +778,110 @@ class KnowledgeItemDetailDialog(ctk.CTkToplevel):
     def center_window(self):
         """居中显示窗口"""
         self.update_idletasks()
-        width = self.winfo_width()
-        height = self.winfo_height()
+        width = 600
+        height = 500
         x = (self.winfo_screenwidth() // 2) - (width // 2)
         y = (self.winfo_screenheight() // 2) - (height // 2)
-        self.geometry(f"+{x}+{y}")
+        self.geometry(f"{width}x{height}+{x}+{y}")
 
     def create_widgets(self):
         """创建对话框组件"""
         # 主容器
-        main_container = ctk.CTkFrame(self)
+        main_container = ctk.CTkFrame(self, fg_color=self.colors['light'], corner_radius=15)
         main_container.pack(fill="both", expand=True, padx=20, pady=20)
 
         # 标题
         title_label = ctk.CTkLabel(
             main_container,
             text=self.item.get('title', '无标题'),
-            font=ctk.CTkFont(size=18, weight="bold"),
+            font=ctk.CTkFont(size=20, weight="bold"),
+            text_color=self.colors['dark']
         )
-        title_label.pack(anchor="w", pady=(0, 10))
+        title_label.pack(anchor="w", pady=(20, 15), padx=20)
+
+        # 信息卡片
+        info_card = ctk.CTkFrame(main_container, fg_color="white", corner_radius=12)
+        info_card.pack(fill="x", padx=20, pady=(0, 20))
+        info_card.grid_columnconfigure(1, weight=1)
 
         # 分类信息
         if self.item.get('category'):
-            category_label = ctk.CTkLabel(
-                main_container,
-                text=f"分类: {self.item.get('category')}",
+            category_frame = ctk.CTkFrame(info_card, fg_color="transparent")
+            category_frame.grid(row=0, column=0, columnspan=2, sticky="ew", padx=15, pady=10)
+
+            ctk.CTkLabel(
+                category_frame,
+                text="🏷️ 分类:",
+                font=ctk.CTkFont(size=12, weight="bold"),
+                text_color=self.colors['dark']
+            ).pack(side="left")
+
+            ctk.CTkLabel(
+                category_frame,
+                text=self.item.get('category'),
                 font=ctk.CTkFont(size=12),
-            )
-            category_label.pack(anchor="w", pady=(0, 10))
+                text_color=self.colors['primary']
+            ).pack(side="left", padx=(5, 0))
 
         # 创建时间
-        time_label = ctk.CTkLabel(
-            main_container,
-            text="创建时间: {self.item.get('created_at', '未知时间')}",
+        time_frame = ctk.CTkFrame(info_card, fg_color="transparent")
+        time_frame.grid(row=1, column=0, columnspan=2, sticky="ew", padx=15, pady=5)
+
+        ctk.CTkLabel(
+            time_frame,
+            text="⏰ 创建时间:",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color=self.colors['dark']
+        ).pack(side="left")
+
+        ctk.CTkLabel(
+            time_frame,
+            text=self.item.get('created_at', '未知时间'),
             font=ctk.CTkFont(size=12),
-        )
-        time_label.pack(anchor="w", pady=(0, 15))
+            text_color="#666666"
+        ).pack(side="left", padx=(5, 0))
 
         # 复习状态
+        status_frame = ctk.CTkFrame(info_card, fg_color="transparent")
+        status_frame.grid(row=2, column=0, columnspan=2, sticky="ew", padx=15, pady=10)
+
+        ctk.CTkLabel(
+            status_frame,
+            text="📊 复习状态:",
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color=self.colors['dark']
+        ).pack(side="left")
+
+        status_color = self.colors['warning'] if self.item.get('is_today_review') else self.colors['success']
         status_label = ctk.CTkLabel(
-            main_container,
-            text=f"复习状态: {self.item.get('review_status', '未知状态')}",
+            status_frame,
+            text=self.item.get('review_status', '未知状态'),
+            font=ctk.CTkFont(size=12, weight="bold"),
+            text_color="white",
+            fg_color=status_color,
+            corner_radius=8,
+            padx=8,
+            pady=2
+        )
+        status_label.pack(side="left", padx=(5, 0))
+
+        # 内容区域
+        content_frame = ctk.CTkFrame(main_container, fg_color="white", corner_radius=12)
+        content_frame.pack(fill="both", expand=True, padx=20, pady=(0, 20))
+
+        ctk.CTkLabel(
+            content_frame,
+            text="📄 内容",
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color=self.colors['dark']
+        ).pack(anchor="w", padx=15, pady=15)
+
+        content_text = ctk.CTkTextbox(
+            content_frame,
+            wrap="word",
             font=ctk.CTkFont(size=12),
-            text_color="#4ECDC4" if self.item.get('is_today_review') else "#888888"
+            border_width=0
         )
-        status_label.pack(anchor="w", pady=(0, 15))
-
-        # 内容
-        content_label = ctk.CTkLabel(
-            main_container, text="内容:", font=ctk.CTkFont(size=14, weight="bold")
-        )
-        content_label.pack(anchor="w", pady=(0, 5))
-
-        content_frame = ctk.CTkFrame(main_container)
-        content_frame.pack(fill="both", expand=True)
-
-        content_text = ctk.CTkTextbox(content_frame, wrap="word")
-        content_text.pack(fill="both", expand=True, padx=10, pady=10)
+        content_text.pack(fill="both", expand=True, padx=15, pady=(0, 15))
         content_text.insert("1.0", self.item.get('content', '无内容'))
         content_text.configure(state="disabled")
