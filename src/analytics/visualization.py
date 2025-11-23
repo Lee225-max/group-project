@@ -112,7 +112,7 @@ def create_memory_statistics_chart(self, user_id: int) -> str:
             "weekly_retention_rate": 85.5,
             "streak_days": 7
         }'''
-
+'''
 import matplotlib.pyplot as plt
 import matplotlib
 
@@ -205,4 +205,4 @@ class AnalyticsVisualization:
                 "mastered_items": 25,
                 "overdue_count": 3,
                 "total_today": 20
-            }
+            }'''
