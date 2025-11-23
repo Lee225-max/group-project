@@ -62,7 +62,7 @@ def test_analytics_imports():
     """测试分析模块导入"""
     try:
         from src.analytics.ui import AnalyticsFrame
-        +        _ = AnalyticsFrame  # 避免 F401
+
         assert True
     except ImportError as exc:
         assert False, f'导入失败: {exc}'
