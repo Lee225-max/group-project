@@ -12,18 +12,18 @@ import base64
 import os
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Dict, List, Any#, Tuple
+from typing import Any, Dict, List
 
 import matplotlib
 
-matplotlib.use('Agg')  # 使用非交互式后端
+#matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 
 from src.database.manager import DatabaseManager
 from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
 
-
+plt.switch_backend("Agg")  # 使用非交互式后端
 
 class AnalyticsService:
     """统计分析服务实现"""
