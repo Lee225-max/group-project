@@ -19,7 +19,7 @@ from src.database.models import User  # noqa: E402
 # from datetime import datetime, timedelta
 
 # 添加src到路径
-class TestAnalyticsService :
+class TestAnalyticsService:
     """统计分析服务测试类"""
 
     @pytest.fixture
