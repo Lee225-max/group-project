@@ -6,10 +6,10 @@
 """
 统计分析模块测试 - 成员D负责
 """
-
-import pytest
 import os
 import sys
+import pytest
+
 from datetime import datetime, timedelta
 
 # 添加src到路径
@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from src.analytics.service import AnalyticsService
 from src.database.manager import DatabaseManager
-from src.database.models import User, KnowledgeItem, ReviewRecord
+from src.database.models import User#, KnowledgeItem, ReviewRecord
 
 
 class TestAnalyticsService:
@@ -62,8 +62,8 @@ class TestAnalyticsService:
 def test_analytics_imports():
     """测试分析模块导入"""
     try:
-        from src.analytics.service import AnalyticsService
-        from src.analytics.ui import AnalyticsFrame
+        from src.analytics.service import AnalyticsService # noqa: F401
+        from src.analytics.ui import AnalyticsFrame # noqa: F401
         assert True
-    except ImportError as e:
-        assert False, f"导入失败: {e}"
+    except ImportError as exc:#e
+        assert False, f"导入失败: {exc}"#e
