@@ -8,11 +8,19 @@
 """
 import os
 import sys
+
 import pytest
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
-from src.analytics.service import AnalyticsService
-from src.database.manager import DatabaseManager
-from src.database.models import User  # , KnowledgeItem, ReviewRecord
+
+from src.analytics.service import AnalyticsService# noqa: E402
+from src.database.manager import DatabaseManager# noqa: E402
+from src.database.models import User# noqa: E402
+
+
+
+
+  # , KnowledgeItem, ReviewRecord
 from datetime import datetime, timedelta
 
 # 添加src到路径
@@ -63,7 +71,6 @@ class TestAnalyticsService:
 def test_analytics_imports():
     """测试分析模块导入"""
     try:
-        #from src.analytics.service import AnalyticsService # noqa: F401
         from src.analytics.ui import AnalyticsFrame # noqa: F401
         assert True
     except ImportError as exc:#e

@@ -7,22 +7,25 @@
 统计分析服务
 """
 from __future__ import annotations
+
 import base64
 import os
 from datetime import datetime, timedelta
 from io import BytesIO
 from typing import Dict, List, Any#, Tuple
+
 import matplotlib
 
 matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 
-from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
 from src.database.manager import DatabaseManager
+from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
 
 
-class AnalyticsService:#（IAnalyticsService）
+
+class AnalyticsService:
     """统计分析服务实现"""
 
     def __init__(self, db_manager: DatabaseManager):
