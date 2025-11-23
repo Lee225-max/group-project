@@ -82,16 +82,22 @@ class AnalyticsFrame(ctk.CTkFrame):
 
         # 创建2行3列的网格布局
         for i, (title, key, icon, color) in enumerate(stats_config):
-            row = i // 3
-            col = i % 3
-
-            card = self.create_stat_card(cards_frame, title, "加载中...", icon, color)
-            card.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
-            self.stats_cards[key] = card
+            row, col = divmod(i, 3)
+            card_frame, value_label = self.create_stat_card(cards_frame, title, "加载中...", icon, color)
+#            row = i // 3
+#            col = i % 3
+ #           card = self.create_stat_card(cards_frame, title, "加载中...", icon, color)
+#            card.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+            card_frame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
+            #self.stats_cards[key] = card
+            self.stats_cards[key] = value_label
+            cards_frame.grid_columnconfigure(col, weight=1)
 
             # 设置网格权重
-            cards_frame.grid_columnconfigure(col, weight=1)
-            cards_frame.grid_rowconfigure(row, weight=1)
+        cards_frame.grid_rowconfigure(0, weight=1)
+        cards_frame.grid_rowconfigure(1, weight=1)
+ #       cards_frame.grid_columnconfigure(col, weight=1)
+  #      cards_frame.grid_rowconfigure(row, weight=1)
 
         # 刷新按钮
         refresh_btn = ctk.CTkButton(
@@ -126,7 +132,7 @@ class AnalyticsFrame(ctk.CTkFrame):
         )
         value_label.pack(pady=10)
 
-        return value_label
+        return card, value_label#value_label
 
     def setup_trend_tab(self):
         """设置趋势分析选项卡"""

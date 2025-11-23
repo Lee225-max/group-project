@@ -4,7 +4,7 @@
 # @File : service.py
 # @Software: PyCharm
 """
-统计分析服务 - 成员D负责
+统计分析服务
 """
 
 import matplotlib
@@ -17,11 +17,11 @@ import base64
 from datetime import datetime, timedelta
 from typing import Dict, List, Any, Tuple
 
-from src.common.interfaces import IAnalyticsService
+#from src.common.interfaces import IAnalyticsService
 from src.database.manager import DatabaseManager
 
 
-class AnalyticsService(IAnalyticsService):
+class AnalyticsService():#（IAnalyticsService）
     """统计分析服务实现"""
 
     def __init__(self, db_manager: DatabaseManager):
