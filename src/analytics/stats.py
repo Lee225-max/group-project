@@ -1,4 +1,5 @@
 """艾宾浩斯统计分析+可视化模块"""
+'''
 from src.database.manager import DatabaseManager
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
@@ -116,3 +117,4 @@ class EbbinghausStatsService:
         plt.title("近7天复习效果趋势", fontsize=14, pad=20)
         plt.tight_layout()
         plt.show()
+'''
