@@ -83,13 +83,14 @@ class AnalyticsFrame(ctk.CTkFrame):
         # 创建2行3列的网格布局
         for i, (title, key, icon, color) in enumerate(stats_config):
             row, col = divmod(i, 3)
-            card_frame, value_label = self.create_stat_card(cards_frame, title, "加载中...", icon, color)
+            card_frame, value_label = self.create_stat_card(
+                cards_frame, title, "加载中...", icon, color)
 #            row = i // 3
 #            col = i % 3
  #           card = self.create_stat_card(cards_frame, title, "加载中...", icon, color)
 #            card.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
             card_frame.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
-            #self.stats_cards[key] = card
+            # self.stats_cards[key] = card
             self.stats_cards[key] = value_label
             cards_frame.grid_columnconfigure(col, weight=1)
 
@@ -111,7 +112,8 @@ class AnalyticsFrame(ctk.CTkFrame):
 
     def create_stat_card(self, parent, title, value, icon, color):
         """创建统计卡片"""
-        card = ctk.CTkFrame(parent, border_width=2, border_color=color,fg_color="white")
+        card = ctk.CTkFrame(parent,  border_width=2,
+                            border_color=color, fg_color="white")
 
         # 图标和标题
         header_frame = ctk.CTkFrame(card, fg_color="transparent")
@@ -196,23 +198,28 @@ class AnalyticsFrame(ctk.CTkFrame):
         """在新线程中加载数据"""
         try:
             # 获取统计数据
-            self.stats_data = self.analytics_service.get_user_stats(self.current_user.id)
+            self.stats_data = self.analytics_service.get_user_stats(
+                self.current_user.id)
 
             # 获取图表数据
-            self.chart_image = self.analytics_service.create_learning_chart(self.current_user.id)
+            self.chart_image = self.analytics_service.create_learning_chart(
+                self.current_user.id)
 
             # 获取分类统计
-            self.category_stats = self.analytics_service.get_category_stats(self.current_user.id)
+            self.category_stats = self.analytics_service.get_category_stats(
+                self.current_user.id)
 
             # 获取复习效果
-            self.effectiveness_stats = self.analytics_service.get_review_effectiveness(self.current_user.id)
+            self.effectiveness_stats = self.analytics_service.get_review_effectiveness(
+                self.current_user.id)
 
             # 在主线程中更新UI
             self.after(0, self._update_ui)
 
-        except Exception as err:#e
-            self.after(0,lambda message=str(err): messagebox.showerror("错误", f"加载数据失败: {message}"))
-            #self.after(0, lambda: messagebox.showerror("错误", f"加载数据失败: {str(e)}"))
+        except Exception as err:  # e
+            self.after(0, lambda message=str(err)
+                       : messagebox.showerror("错误",  f"加载数据失败: {message}"))
+            # self.after(0, lambda: messagebox.showerror("错误", f"加载数据失败: {str(e)}"))
 
     def _update_ui(self):
         """更新UI显示"""
