@@ -16,6 +16,12 @@ from src.database.models import KnowledgeItem
 class ReviewDialog(ctk.CTkToplevel):
     """复习对话框 - 采用知识管理页面样式"""
 
+    def get_selected_knowledge(self):
+        """模拟返回当前选中的知识点ID"""
+        if isinstance(self.review, dict):
+            return self.review.get('knowledge_item_id') or self.review.get('knowledge_id')
+        return getattr(self.review, 'knowledge_item_id', None)
+
     def __init__(self, parent, review, current_user, scheduler_service, db_manager, refresh_callback):
         super().__init__(parent)
         self.review = review
@@ -92,21 +98,25 @@ class ReviewDialog(ctk.CTkToplevel):
         """加载知识点内容"""
         session = self.db_manager.get_session()
         try:
-            knowledge_item_id = self.review.get(
-                'knowledge_item_id') or self.review.get('knowledge_id')
-            if not knowledge_item_id:
+            knowledge_id = self.get_selected_knowledge()
+            if not knowledge_id:
                 print("❌ 无法获取知识点ID - ui.py:92")
                 return
 
             self.knowledge_item = (
                 session.query(KnowledgeItem)
-                    .filter(KnowledgeItem.id == knowledge_item_id)
+                    .filter(KnowledgeItem.id == knowledge_id)
                     .first()
             )
-            if not self.knowledge_item:
-                print(f"❌ 找不到知识点: ID {knowledge_item_id} - ui.py:101")
+
+            if self.knowledge_item:
+                print(f"✅ 成功加载知识点: ID {knowledge_id}")
+            else:
+                print(f"❌ 找不到知识点: ID {knowledge_id} - ui.py:101")
+
         except Exception as e:
             print(f"❌ 加载知识点失败: {e} - ui.py:103")
+
         finally:
             session.close()
 
