@@ -27,6 +27,55 @@ plt.switch_backend("Agg")  # 使用非交互式后端
 class AnalyticsService:
     """统计分析服务实现"""
 
+    def get_user_stats(self, user_id):
+        """获取用户的总体统计（供测试和UI使用）"""
+        try:
+            from src.database.manager import DatabaseManager
+
+            db = DatabaseManager()
+            stats = db.get_overall_stats(user_id)
+
+            # 确保即便数据库为空，也返回预期字段结构
+            default_stats = {
+                "total_knowledge": 0,
+                "mastered_knowledge": 0,
+                "completion_rate_30d": 0.0,
+                "streak_days": 0,
+                "last_review_date": "暂无",
+                "today_stats": {
+                    "total_today": 0,
+                    "completed_today": 0,
+                    "overdue_count": 0,
+                    "completion_rate": 0.0,
+                },
+                "ebbinghaus_distribution": {},
+            }
+
+            if not stats:
+                return default_stats
+
+            # 用数据库值覆盖默认值
+            default_stats.update(stats)
+            return default_stats
+
+        except Exception as e:
+            print(f"❌ [Analytics DEBUG] 获取用户统计失败: {e}")
+            return {
+                "error": str(e),
+                "total_knowledge": 0,
+                "mastered_knowledge": 0,
+                "completion_rate_30d": 0.0,
+                "streak_days": 0,
+                "last_review_date": "暂无",
+                "today_stats": {
+                    "total_today": 0,
+                    "completed_today": 0,
+                    "overdue_count": 0,
+                    "completion_rate": 0.0,
+                },
+                "ebbinghaus_distribution": {},
+            }
+
     def __init__(self, db_manager: DatabaseManager):
         self.db_manager = db_manager
 
