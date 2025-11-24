@@ -24,57 +24,7 @@ plt.switch_backend("Agg")  # 使用非交互式后端
 class AnalyticsService:
     """统计分析服务实现"""
 
-    def get_user_stats(self, user_id):
-        """获取用户的总体统计（供测试和UI使用）"""
-        try:
-            from src.database.manager import DatabaseManager
 
-            db = DatabaseManager()
-            stats = db.get_overall_stats(user_id)
-
-            # 默认结构包括测试所需键
-            default_stats = {
-                "total_knowledge_items": 0,  # ✅ 测试需要这个键名
-                "total_knowledge": 0,  # ✅ 兼容UI旧字段
-                "mastered_knowledge": 0,
-                "completion_rate_30d": 0.0,
-                "streak_days": 0,
-                "last_review_date": "暂无",
-                "today_stats": {
-                    "total_today": 0,
-                    "completed_today": 0,
-                    "overdue_count": 0,
-                    "completion_rate": 0.0,
-                },
-                "ebbinghaus_distribution": {},
-            }
-
-            if stats:
-                # 将数据库返回的结果合并进 default_stats
-                default_stats.update(stats)
-                # ✅ 确保 total_knowledge_items 同步更新
-                default_stats["total_knowledge_items"] = stats.get("total_knowledge", 0)
-
-            return default_stats
-
-        except Exception as e:
-            print(f"❌ [Analytics DEBUG] 获取用户统计失败: {e}")
-            return {
-                "error": str(e),
-                "total_knowledge_items": 0,
-                "total_knowledge": 0,
-                "mastered_knowledge": 0,
-                "completion_rate_30d": 0.0,
-                "streak_days": 0,
-                "last_review_date": "暂无",
-                "today_stats": {
-                    "total_today": 0,
-                    "completed_today": 0,
-                    "overdue_count": 0,
-                    "completion_rate": 0.0,
-                },
-                "ebbinghaus_distribution": {},
-            }
 
     def __init__(self, db_manager: DatabaseManager):
         self.db_manager = db_manager
@@ -88,7 +38,7 @@ class AnalyticsService:
         except Exception:
             self.chinese_font = None
 
-    def _find_chinese_font(self) -> str :
+    def _find_chinese_font(self) -> str:
         """查找系统中可用的中文字体"""
         candidates = [
             # macOS
@@ -165,7 +115,116 @@ class AnalyticsService:
 
         finally:
             session.close()
+    def calculate_user_overview(self, user_id: int) -> dict:
+        """统计用户总体学习概况"""
+        session = self.db_manager.get_session()
+        try:
+            total_items = (session.query(KnowledgeItem)
+                           .filter(KnowledgeItem.user_id == user_id, KnowledgeItem.is_active)
+                           .count()
+                           )
 
+            today_start = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+            today_reviews = (session.query(ReviewSchedule)
+                             .filter(
+                ReviewSchedule.user_id == user_id,
+                ReviewSchedule.scheduled_date >= today_start,
+                ReviewSchedule.scheduled_date < today_start + timedelta(days=1),
+                ReviewSchedule.completed,
+            ).count()
+                             )
+
+            completed_reviews = (session.query(ReviewRecord)
+                                 .filter(
+                ReviewRecord.knowledge_item_id.in_(
+                    session.query(KnowledgeItem.id)
+                        .filter(KnowledgeItem.user_id == user_id)
+                )
+            ).count()
+                                 )
+
+            # 计算最近30天保持率
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            recent_records = (session.query(ReviewRecord)
+                              .filter(
+                ReviewRecord.knowledge_item_id.in_(
+                    session.query(KnowledgeItem.id)
+                        .filter(KnowledgeItem.user_id == user_id)
+                ),
+                ReviewRecord.review_date >= thirty_days_ago,
+            ).all()
+                              )
+
+            if recent_records:
+                avg_recall_score = sum(r.recall_score or 0 for r in recent_records) / len(recent_records)
+                retention_rate = avg_recall_score
+            else:
+                retention_rate = 0
+
+            streak_days = self._calculate_streak_days(session, user_id)
+
+            return {
+                "total_knowledge_items": total_items,
+                "today_review_count": today_reviews,
+                "completed_reviews": completed_reviews,
+                "retention_rate": round(retention_rate, 1),
+                "streak_days": streak_days,
+                "learning_efficiency": self._calculate_learning_efficiency(session, user_id),
+            }
+
+        finally:
+            session.close()
+    def get_user_stats(self, user_id):
+        """获取用户的总体统计（供测试和UI使用）"""
+        try:
+            from src.database.manager import DatabaseManager
+
+            db = DatabaseManager()
+            stats = db.get_overall_stats(user_id)
+
+            # 默认结构包括测试所需键
+            default_stats = {
+                "total_knowledge_items": 0,  # ✅ 测试需要这个键名
+                "total_knowledge": 0,  # ✅ 兼容UI旧字段
+                "mastered_knowledge": 0,
+                "completion_rate_30d": 0.0,
+                "streak_days": 0,
+                "last_review_date": "暂无",
+                "today_stats": {
+                    "total_today": 0,
+                    "completed_today": 0,
+                    "overdue_count": 0,
+                    "completion_rate": 0.0,
+                },
+                "ebbinghaus_distribution": {},
+            }
+
+            if stats:
+                # 将数据库返回的结果合并进 default_stats
+                default_stats.update(stats)
+                # ✅ 确保 total_knowledge_items 同步更新
+                default_stats["total_knowledge_items"] = stats.get("total_knowledge", 0)
+
+            return default_stats
+
+        except Exception as e:
+            print(f"❌ [Analytics DEBUG] 获取用户统计失败: {e}")
+            return {
+                "error": str(e),
+                "total_knowledge_items": 0,
+                "total_knowledge": 0,
+                "mastered_knowledge": 0,
+                "completion_rate_30d": 0.0,
+                "streak_days": 0,
+                "last_review_date": "暂无",
+                "today_stats": {
+                    "total_today": 0,
+                    "completed_today": 0,
+                    "overdue_count": 0,
+                    "completion_rate": 0.0,
+                },
+                "ebbinghaus_distribution": {},
+            }
     def _calculate_streak_days(self, session, user_id: int) -> int:
         """计算连续学习天数"""
 
@@ -361,3 +420,4 @@ class AnalyticsService:
 
         finally:
             session.close()
+
