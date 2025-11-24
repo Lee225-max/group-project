@@ -1,5 +1,5 @@
 # -*- codeing =utf-8 -*-
-from typing import Dict, List, Optional, Optional, Any  # @Time : 2025/11/24 0:53
+from typing import Dict, List, Optional, Optional, Optional, Any  # @Time : 2025/11/24 0:53
 # @Author: Muncy
 # @File : service.py
 # @Software: PyCharm
@@ -39,7 +39,7 @@ class AnalyticsService:
         except Exception:
             self.chinese_font = None
 
-    def _find_chinese_font(self) -> str | None:
+    def _find_chinese_font(self) -> str :
         """查找系统中可用的中文字体"""
         candidates = [
             # macOS
