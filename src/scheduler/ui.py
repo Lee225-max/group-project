@@ -290,10 +290,7 @@ class ReviewDialog(ctk.CTkToplevel):
                     self.review.get('schedule_id')
                     or getattr(self.review, 'schedule_id', None)
             )
-            knowledge_id = (
-                    self.review.get('knowledge_item_id')
-                    or getattr(self.review, 'knowledge_item_id', None)
-            )
+
 
             if not schedule_id:
                 messagebox.showerror("错误", "无法确定复习计划ID，复习完成失败。")
@@ -311,23 +308,32 @@ class ReviewDialog(ctk.CTkToplevel):
             if result.get("success", False):
                 messagebox.showinfo("成功", "🎉 复习完成！")
 
-                # 刷新今日复习界面
+                # 1️⃣ 同步刷新今日复习界面
                 if self.refresh_callback:
                     self.refresh_callback()
 
-                # 同步刷新知识管理界面（若存在）
+                # 2️⃣ 同步刷新知识管理界面
                 try:
+                    # 延迟导入防止循环依赖
                     from src.knowledge.ui import KnowledgeManagementFrame
-                    parent = self.master
-                    while parent:
-                        if isinstance(parent, KnowledgeManagementFrame):
-                            parent.load_knowledge_items()
-                            break
-                        parent = getattr(parent, "master", None)
+
+                    # 获取应用主窗口的所有子组件
+                    root_widget = self.master
+                    while root_widget.master:
+                        root_widget = root_widget.master  # 找到主App窗口
+
+                    # 遍历Frame查找KnowledgeManagementFrame实例
+                    for child in root_widget.winfo_children():
+                        for subwidget in child.winfo_children():
+                            if isinstance(subwidget, KnowledgeManagementFrame):
+                                subwidget.load_knowledge_items()
+                                print("🔄 已自动刷新知识管理界面 - ui.py:complete_review")
+                                break
                 except Exception as e:
-                    print(f"⚠️ 无法自动刷新知识管理界面: {e}")
+                    print(f"⚠️ 无法刷新知识管理界面: {e} - ui.py:complete_review")
 
                 self.destroy()
+
             else:
                 messagebox.showerror("错误", result.get("msg", "复习完成失败"))
 
