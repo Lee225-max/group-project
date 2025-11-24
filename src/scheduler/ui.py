@@ -286,13 +286,20 @@ class ReviewDialog(ctk.CTkToplevel):
             effectiveness = max(1, min(5, int(self.recall_score * 5)))  # 1-5分
 
             # 获取复习计划ID和知识点ID
-            schedule_id = self.review.get('id') or self.review.get('schedule_id')
-            knowledge_id = self.review.get(
-                'knowledge_item_id') or self.review.get('knowledge_id')
+            schedule_id = (
+                    self.review.get('schedule_id')
+                    or getattr(self.review, 'schedule_id', None)
+            )
+            knowledge_id = (
+                    self.review.get('knowledge_item_id')
+                    or getattr(self.review, 'knowledge_item_id', None)
+            )
 
             if not schedule_id:
-                messagebox.showerror("错误", "无法获取复习计划ID")
+                messagebox.showerror("错误", "无法确定复习计划ID，复习完成失败。")
                 return
+
+
 
             result = self.scheduler_service.complete_review(
                 schedule_id,
@@ -303,8 +310,23 @@ class ReviewDialog(ctk.CTkToplevel):
 
             if result.get("success", False):
                 messagebox.showinfo("成功", "🎉 复习完成！")
+
+                # 刷新今日复习界面
                 if self.refresh_callback:
                     self.refresh_callback()
+
+                # 同步刷新知识管理界面（若存在）
+                try:
+                    from src.knowledge.ui import KnowledgeManagementFrame
+                    parent = self.master
+                    while parent:
+                        if isinstance(parent, KnowledgeManagementFrame):
+                            parent.load_knowledge_items()
+                            break
+                        parent = getattr(parent, "master", None)
+                except Exception as e:
+                    print(f"⚠️ 无法自动刷新知识管理界面: {e}")
+
                 self.destroy()
             else:
                 messagebox.showerror("错误", result.get("msg", "复习完成失败"))

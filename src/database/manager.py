@@ -16,7 +16,10 @@ from datetime import datetime, timedelta
 class DatabaseManager:
     def __init__(self, db_path="src/database/review_alarm.db"):
         self.db_path = db_path
-        self.engine = create_engine(f"sqlite:///{db_path}")
+        self.engine = create_engine(
+            f"sqlite:///{db_path}",
+            connect_args={"check_same_thread": False}  # 允许多线程访问同一连接
+        )
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)  # 自动创建表
 
