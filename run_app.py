@@ -37,7 +37,7 @@ def main():
             'src.database.manager',
             'src.auth.ui', 
             'src.knowledge.ui',
-            "src.frontend_ui_main_window"#新增调用
+            'src.analytics.ui'#新增调用
         ]
         
         for module in required_modules:
