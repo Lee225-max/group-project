@@ -368,71 +368,63 @@ class DatabaseManager:
         finally:
             session.close()
 
-    def complete_review(
-        self, schedule_id, user_id, effectiveness, recall_score, notes=None
-    ):
-        """完成复习+生成下次计划（艾宾浩斯核心）"""
+    def complete_review(self, schedule_id, user_id, effectiveness, recall_score, notes=None):
         session = self.get_session()
         try:
-            # 验证复习计划
-            schedule = (
-                session.query(ReviewSchedule)
-                .filter(
-                    ReviewSchedule.id == schedule_id,
-                    ReviewSchedule.user_id == user_id,
-                    ~ReviewSchedule.completed,
-                )
-                .first()
-            )
+            # 1. 找到当前复习计划
+            schedule = session.query(ReviewSchedule).filter(
+                ReviewSchedule.id == schedule_id,
+                ReviewSchedule.user_id == user_id,
+                ~ReviewSchedule.completed  # 只处理未完成的计划
+            ).first()
             if not schedule:
                 return {"success": False, "msg": "复习计划不存在或已完成"}
 
-            # 验证评分范围
+            # 2. 验证评分（无需修改）
             if not (1 <= effectiveness <= 5):
                 return {"success": False, "msg": "效果评分需在1-5分之间"}
             if not (0 <= recall_score <= 100):
                 return {"success": False, "msg": "回忆分数需在0-100之间"}
 
-            # 创建复习记录
+            # 3. 创建复习记录（关键：更新最后复习时间）
             record = ReviewRecord(
                 knowledge_item_id=schedule.knowledge_item_id,
                 schedule_id=schedule_id,
                 effectiveness=effectiveness,
                 recall_score=recall_score,
                 notes=notes,
+                review_date=datetime.now()  # 明确设置当前时间（避免默认值延迟）
             )
             session.add(record)
 
-            # 标记当前计划完成
+            # 4. 标记当前计划为完成（关键：今日列表会过滤已完成项）
             schedule.completed = True
 
-            # 艾宾浩斯间隔调整规则
+            # 5. 生成下一阶段计划（关键：知识管理显示下一阶段）
             from src.scheduler.ebbinghaus_config import EbbinghausConfig
-
             current_index = schedule.interval_index
             item = schedule.knowledge_item
 
-            # 根据效果调整阶段
+            # 按复习效果调整下一阶段（艾宾浩斯核心逻辑）
             if effectiveness >= 4:
-                next_index = current_index + 1
+                next_index = current_index + 1  # 效果好，进入下一阶段
             elif effectiveness >= 2:
-                next_index = current_index
+                next_index = current_index  # 效果一般，重复当前阶段
             else:
-                next_index = max(0, current_index - 1)
+                next_index = max(0, current_index - 1)  # 效果差，回退阶段
 
-            # 限制最大阶段（避免越界）
+            # 若已完成所有7阶段，无需生成下一计划
             if next_index >= EbbinghausConfig.get_total_stages():
                 session.commit()
                 return {
                     "success": True,
                     "msg": "已完成所有艾宾浩斯阶段，知识点标记为已掌握",
+                    "data": {"is_mastered": True}
                 }
 
-            # 计算下次间隔（使用艾宾浩斯标准间隔）
+            # 生成下一阶段复习计划
             next_interval_hours = EbbinghausConfig.get_interval_hours(next_index)
-            next_review_date = EbbinghausConfig.get_next_review_date(next_index)
-
-            # 生成下次复习计划
+            next_review_date = datetime.now() + timedelta(hours=next_interval_hours)
             next_schedule = ReviewSchedule(
                 knowledge_item_id=item.id,
                 user_id=user_id,
@@ -446,11 +438,12 @@ class DatabaseManager:
 
             return {
                 "success": True,
-                "msg": f"复习完成！下次复习时间：{next_schedule.scheduled_date.strftime('%Y-%m-%d %H:%M')}",
+                "msg": f"复习完成！下次复习时间：{next_review_date.strftime('%Y-%m-%d %H:%M')}",
                 "data": {
                     "next_schedule_id": next_schedule.id,
-                    "next_review_date": next_schedule.scheduled_date,
-                },
+                    "next_review_date": next_review_date,
+                    "next_stage": next_index  # 新增：返回下一阶段，方便界面显示
+                }
             }
         except Exception as e:
             session.rollback()
