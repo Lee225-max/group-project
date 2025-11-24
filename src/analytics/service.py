@@ -32,9 +32,10 @@ class AnalyticsService:
             db = DatabaseManager()
             stats = db.get_overall_stats(user_id)
 
-            # 确保即便数据库为空，也返回预期字段结构
+            # 默认结构包括测试所需键
             default_stats = {
-                "total_knowledge": 0,
+                "total_knowledge_items": 0,  # ✅ 测试需要这个键名
+                "total_knowledge": 0,  # ✅ 兼容UI旧字段
                 "mastered_knowledge": 0,
                 "completion_rate_30d": 0.0,
                 "streak_days": 0,
@@ -48,17 +49,19 @@ class AnalyticsService:
                 "ebbinghaus_distribution": {},
             }
 
-            if not stats:
-                return default_stats
+            if stats:
+                # 将数据库返回的结果合并进 default_stats
+                default_stats.update(stats)
+                # ✅ 确保 total_knowledge_items 同步更新
+                default_stats["total_knowledge_items"] = stats.get("total_knowledge", 0)
 
-            # 用数据库值覆盖默认值
-            default_stats.update(stats)
             return default_stats
 
         except Exception as e:
             print(f"❌ [Analytics DEBUG] 获取用户统计失败: {e}")
             return {
                 "error": str(e),
+                "total_knowledge_items": 0,
                 "total_knowledge": 0,
                 "mastered_knowledge": 0,
                 "completion_rate_30d": 0.0,
