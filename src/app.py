@@ -10,6 +10,7 @@ import logging
 from database.manager import DatabaseManager
 from auth.ui import LoginFrame
 
+
 try:
     from .knowledge.ui import KnowledgeManagementFrame
     KNOWLEDGE_MODULE_AVAILABLE = True
@@ -210,16 +211,6 @@ class ReviewAlarmApp:
         placeholder.pack(expand=True)
         print("⚠️ 使用今日复习界面占位符 - app.py:211")
 
-    '''def show_analytics(self):
-        """显示统计分析界面"""
-        self.clear_content_frame()
-
-        placeholder = ctk.CTkLabel(
-            self.content_frame,
-            text="学习统计界面\n(开发中)",
-            font=ctk.CTkFont(size=20, weight="bold"),
-        )
-        placeholder.pack(expand=True)'''
 
     def show_analytics(self):
         """显示统计分析界面"""
