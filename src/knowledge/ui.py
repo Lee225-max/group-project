@@ -48,7 +48,8 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         self.grid_rowconfigure(1, weight=1)
 
         # 主控制栏（包含所有控制元素）
-        control_frame = ctk.CTkFrame(self, fg_color=self.colors['light'], corner_radius=10)
+        control_frame = ctk.CTkFrame(
+            self, fg_color=self.colors['light'], corner_radius=10)
         control_frame.grid(row=0, column=0, sticky="ew", padx=8, pady=5)
         control_frame.grid_columnconfigure(1, weight=1)
 
@@ -90,7 +91,8 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
 
         # 第二行：搜索和筛选
         action_frame = ctk.CTkFrame(control_frame, fg_color="transparent")
-        action_frame.grid(row=1, column=0, columnspan=3, sticky="ew", padx=10, pady=(0, 5))
+        action_frame.grid(row=1, column=0, columnspan=3,
+                          sticky="ew", padx=10, pady=(0, 5))
         action_frame.grid_columnconfigure(0, weight=1)
 
         # 搜索框
@@ -167,7 +169,8 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         """更新今日复习计数"""
         try:
             today_count = self.db_manager.get_today_review_count(self.current_user.id)
-            overdue_count = self.db_manager.get_overdue_reviews_count(self.current_user.id)
+            overdue_count = self.db_manager.get_overdue_reviews_count(
+                self.current_user.id)
 
             if overdue_count > 0:
                 self.today_review_label.configure(
@@ -185,7 +188,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
                     text_color=self.colors['success']
                 )
         except Exception as e:
-            print(f"更新今日复习计数失败: {e} - ui.py:181")
+            print(f"更新今日复习计数失败: {e} - ui.py:188")
             self.today_review_label.configure(
                 text="❌ 加载失败",
                 text_color=self.colors['danger']
@@ -193,28 +196,29 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
 
     def load_knowledge_items(self, items=None):
         """加载知识项列表 - 支持今日复习筛选"""
-        print("🔄 开始加载知识点列表... - ui.py:189")
+        print("🔄 开始加载知识点列表... - ui.py:196")
 
         # 更新今日复习计数（如果不是筛选模式）
         if not self.show_only_today:
             self.update_today_review_count()
 
         if items is None:
-            print("📝 从数据库查询知识点... - ui.py:196")
+            print("📝 从数据库查询知识点... - ui.py:203")
             try:
                 items = self.knowledge_service.get_user_knowledge(self.current_user.id)
                 items = [self._ensure_dict_format(item) for item in items]
             except Exception as e:
-                print(f"❌ 获取知识点失败: {e}，回退到基本方法 - ui.py:201")
-                items = self.knowledge_service.get_user_knowledge_items(self.current_user.id)
+                print(f"❌ 获取知识点失败: {e}，回退到基本方法 - ui.py:208")
+                items = self.knowledge_service.get_user_knowledge_items(
+                    self.current_user.id)
                 items = [self._convert_to_dict(item) for item in items]
 
         # 应用今日复习筛选
         if self.show_only_today:
             items = [item for item in items if item.get('is_today_review', False)]
-            print(f"📅 筛选后今日复习知识点: {len(items)}项 - ui.py:208")
+            print(f"📅 筛选后今日复习知识点: {len(items)}项 - ui.py:215")
 
-        print(f"📊 获取到 {len(items)} 个知识点 - ui.py:210")
+        print(f"📊 获取到 {len(items)} 个知识点 - ui.py:217")
 
         # 清空现有内容
         for widget in self.scrollable_frame.winfo_children():
@@ -243,7 +247,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             empty_label.grid(row=0, column=0, pady=10)
             return
 
-        print(f"🎯 创建 {len(items)} 个知识点卡片 - ui.py:239")
+        print(f"🎯 创建 {len(items)} 个知识点卡片 - ui.py:246")
         for i, item in enumerate(items):
             self.create_knowledge_card(item, i)
 
@@ -272,7 +276,8 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
                 width=6,
                 corner_radius=3
             )
-            urgency_indicator.grid(row=0, column=0, rowspan=3, sticky="ns", padx=(10, 5), pady=10)
+            urgency_indicator.grid(row=0, column=0, rowspan=3,
+                                   sticky="ns", padx=(10, 5), pady=10)
 
         # 内容区域
         content_frame = ctk.CTkFrame(card, fg_color="transparent")
@@ -399,9 +404,11 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         delete_btn.pack(side="left", padx=(0, 8))
 
         # 复习按钮
+        '''
         review_text = "📚 复习" if not is_today_review else "🎯 立即复习"
         review_color = self.colors['success'] if not is_today_review else self.colors['today']
         review_hover = '#139C8B' if not is_today_review else '#E55A4D'
+
 
         review_btn = ctk.CTkButton(
             button_frame,
@@ -412,6 +419,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             **btn_style
         )
         review_btn.pack(side="left", padx=(0, 8))
+        '''
 
         # 加入今日复习按钮（针对非今日复习的知识点）
         if not is_today_review:
@@ -458,9 +466,10 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         """手动将知识点加入今日复习"""
         try:
             item = self._ensure_dict_format(item)
-            print(f"📅 将知识点 '{item.get('title', '无标题')}' 加入今日复习 - ui.py:438")
+            print(f"📅 将知识点 '{item.get('title', '无标题')}' 加入今日复习 - ui.py:464")
 
-            result = self.db_manager.add_to_today_review(item['id'], self.current_user.id)
+            result = self.db_manager.add_to_today_review(
+                item['id'], self.current_user.id)
 
             if result["success"]:
                 messagebox.showinfo(
@@ -473,12 +482,12 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
                 messagebox.showerror("错误", result["msg"])
 
         except Exception as e:
-            print(f"❌ 加入今日复习失败: {e} - ui.py:453")
+            print(f"❌ 加入今日复习失败: {e} - ui.py:479")
             messagebox.showerror("错误", f"加入今日复习失败: {e}")
 
     def add_knowledge_item(self):
         """添加知识点"""
-        print("📝 打开添加知识点对话框... - ui.py:458")
+        print("📝 打开添加知识点对话框... - ui.py:484")
         KnowledgeItemDialog(
             self,
             self.current_user,
@@ -490,7 +499,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
     def edit_item(self, item):
         """编辑知识点"""
         item = self._ensure_dict_format(item)
-        print(f"✏️ 打开编辑知识点对话框: {item.get('title', '无标题')} - ui.py:470")
+        print(f"✏️ 打开编辑知识点对话框: {item.get('title', '无标题')} - ui.py:496")
 
         class AdaptedItem:
             def __init__(self, item_dict):
@@ -528,8 +537,8 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             from src.scheduler.ui import ReviewDialog
 
             item = self._ensure_dict_format(item)
-            print(f"🔍 调试 知识点对象类型: {type(item)} - ui.py:508")
-            print(f"🔍 调试 知识点ID: {item.get('id', 'No id attribute')} - ui.py:509")
+            print(f"🔍 调试 知识点对象类型: {type(item)} - ui.py:534")
+            print(f"🔍 调试 知识点ID: {item.get('id', 'No id attribute')} - ui.py:535")
 
             class AdaptedItem:
                 def __init__(self, item_dict):
@@ -555,32 +564,33 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
             messagebox.showinfo("提示", "复习模块尚未实现")
         except Exception as e:
             messagebox.showerror("错误", f"打开复习对话框失败: {str(e)}")
-            print(f"详细错误信息: {e} - ui.py:533")
+            print(f"详细错误信息: {e} - ui.py:561")
 
     def on_search(self, event=None):
         """搜索功能"""
         search_term = self.search_entry.get().strip()
-        print(f"🔍 执行搜索: '{search_term}' 用户ID: {self.current_user.id} - ui.py:538")
+        print(f"🔍 执行搜索: '{search_term}' 用户ID: {self.current_user.id} - ui.py:566")
 
         try:
             if search_term:
-                print("📝 调用搜索服务... - ui.py:542")
+                print("📝 调用搜索服务... - ui.py:570")
                 items = self.knowledge_service.search_knowledge_items(
                     self.current_user.id, search_term
                 )
-                print(f"📊 搜索返回 {len(items)} 个结果 - ui.py:546")
+                print(f"📊 搜索返回 {len(items)} 个结果 - ui.py:574")
 
                 items = [self._convert_to_dict(item) for item in items]
 
                 if self.show_only_today:
-                    items = [item for item in items if item.get('is_today_review', False)]
+                    items = [item for item in items if item.get(
+                        'is_today_review', False)]
 
                 self.load_knowledge_items(items)
             else:
-                print("🔄 搜索词为空，显示所有知识点 - ui.py:555")
+                print("🔄 搜索词为空，显示所有知识点 - ui.py:583")
                 self.load_knowledge_items()
         except Exception as e:
-            print(f"❌ 搜索过程中出错: {e} - ui.py:558")
+            print(f"❌ 搜索过程中出错: {e} - ui.py:586")
             messagebox.showerror("错误", f"搜索失败: {str(e)}")
 
 
@@ -635,7 +645,8 @@ class KnowledgeItemDialog(ctk.CTkToplevel):
     def create_widgets(self):
         """创建对话框组件"""
         # 主容器
-        main_container = ctk.CTkFrame(self, fg_color=self.colors['light'], corner_radius=15)
+        main_container = ctk.CTkFrame(
+            self, fg_color=self.colors['light'], corner_radius=15)
         main_container.pack(fill="both", expand=True, padx=20, pady=20)
 
         # 标题
@@ -649,7 +660,8 @@ class KnowledgeItemDialog(ctk.CTkToplevel):
         title_label.pack(anchor="w", pady=(20, 20), padx=20)
 
         # 表单容器
-        form_container = ctk.CTkFrame(main_container, fg_color="white", corner_radius=12)
+        form_container = ctk.CTkFrame(
+            main_container, fg_color="white", corner_radius=12)
         form_container.pack(fill="both", expand=True, padx=20, pady=(0, 20))
         form_container.grid_columnconfigure(0, weight=1)
 
@@ -757,25 +769,25 @@ class KnowledgeItemDialog(ctk.CTkToplevel):
                 self.knowledge_service.update_knowledge_item(
                     self.item.id, title=title, category=category, content=content
                 )
-                print(f"✅ 知识点更新成功: {title} - ui.py:734")
+                print(f"✅ 知识点更新成功: {title} - ui.py:763")
             else:
                 # 添加新知识点
                 self.knowledge_service.add_knowledge_item(
                     self.user.id, title, content, category
                 )
-                print(f"✅ 知识点创建成功: {title} - ui.py:740")
+                print(f"✅ 知识点创建成功: {title} - ui.py:769")
 
             # 调用回调函数刷新列表
             if self.callback:
                 self.callback()
-                print("🔄 回调函数已调用 - ui.py:745")
+                print("🔄 回调函数已调用 - ui.py:774")
 
             messagebox.showinfo("成功", "✅ 知识点已保存")
             self.destroy()
 
         except Exception as e:
             messagebox.showerror("错误", f"保存失败: {str(e)}")
-            print(f"❌ 保存失败: {e} - ui.py:752")
+            print(f"❌ 保存失败: {e} - ui.py:781")
 
 
 class KnowledgeItemDetailDialog(ctk.CTkToplevel):
@@ -813,7 +825,8 @@ class KnowledgeItemDetailDialog(ctk.CTkToplevel):
     def create_widgets(self):
         """创建对话框组件"""
         # 主容器
-        main_container = ctk.CTkFrame(self, fg_color=self.colors['light'], corner_radius=15)
+        main_container = ctk.CTkFrame(
+            self, fg_color=self.colors['light'], corner_radius=15)
         main_container.pack(fill="both", expand=True, padx=20, pady=20)
 
         # 标题
@@ -833,7 +846,8 @@ class KnowledgeItemDetailDialog(ctk.CTkToplevel):
         # 分类信息
         if self.item.get('category'):
             category_frame = ctk.CTkFrame(info_card, fg_color="transparent")
-            category_frame.grid(row=0, column=0, columnspan=2, sticky="ew", padx=15, pady=10)
+            category_frame.grid(row=0, column=0, columnspan=2,
+                                sticky="ew", padx=15, pady=10)
 
             ctk.CTkLabel(
                 category_frame,
@@ -878,7 +892,8 @@ class KnowledgeItemDetailDialog(ctk.CTkToplevel):
             text_color=self.colors['dark']
         ).pack(side="left")
 
-        status_color = self.colors['warning'] if self.item.get('is_today_review') else self.colors['success']
+        status_color = self.colors['warning'] if self.item.get(
+            'is_today_review') else self.colors['success']
         status_label = ctk.CTkLabel(
             status_frame,
             text=self.item.get('review_status', '未知状态'),

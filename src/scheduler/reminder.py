@@ -24,11 +24,11 @@ logger = logging.getLogger(__name__)
 
 class SystemNotifier:
     """跨平台系统通知器"""
-    
+
     def __init__(self):
         self.system_name = platform.system()
         logger.info(f"初始化系统通知器，检测到系统: {self.system_name}")
-    
+
     def notify(self, title: str, message: str, timeout: int = 10) -> bool:
         """
         显示系统通知
@@ -43,76 +43,77 @@ class SystemNotifier:
                 result = self._mac_notify(title, message)
                 logger.info(f"  macOS 通知结果: {'✅ 成功' if result else '❌ 失败'}")
                 return result
-                
+
             elif self.system_name == "Windows":
                 logger.info("🪟 使用 Windows 通知方案")
                 result = self._windows_notify(title, message, timeout)
                 logger.info(f"  Windows 通知结果: {'✅ 成功' if result else '❌ 失败'}")
                 return result
-                
+
             elif self.system_name == "Linux":
                 logger.info("🐧 使用 Linux 通知方案")
                 result = self._linux_notify(title, message, timeout)
                 logger.info(f"  Linux 通知结果: {'✅ 成功' if result else '❌ 失败'}")
                 return result
-                
+
             else:
                 logger.warning(f"不支持的操作系统: {self.system_name}")
                 result = self._fallback_notify(title, message)
                 logger.info(f"  备用方案结果: {'✅ 成功' if result else '❌ 失败'}")
                 return result
-               
+
         except Exception as e:
             logger.error(f"显示系统通知失败: {e}")
             return False
-    
+
     def _mac_notify(self, title: str, message: str) -> bool:
         """macOS 系统通知 - 使用 terminal-notifier"""
         try:
             # 清理消息中的特殊字符
             message_clean = message.replace('"', "'").replace('\n', ' ')
-        
+
             # 使用与测试脚本相同的 AppleScript 格式
             script = f'''
             display notification "{message_clean}" with title "📚 智能复习提醒" sound name "default"
             '''
-        
+
             logger.info(f"  执行 AppleScript: {script.strip()}")
             result = subprocess.run([
                 "terminal-notifier",
                 "-title", title,
                 "-message", message_clean,
                 "-sound", "default",
-                 "-group", "review-alarm"  # 添加分组标识
-            ], capture_output=True, timeout=10)          
-          
+                "-group", "review-alarm"  # 添加分组标识
+            ], capture_output=True, timeout=10)
+
             if result.returncode == 0:
                 logger.info("   macOS 通知结果: ✅ 成功")
                 return True
             else:
                 logger.error(f"   macOS 通知失败: {result.stderr}")
                 return False
-            
+
         except Exception as e:
             logger.error(f"  macOS 通知异常: {e}")
             return False
-    
+
     def _windows_notify(self, title: str, message: str, timeout: int) -> bool:
         """Windows 系统通知 - 增强版"""
         try:
             logger.info("  尝试 Windows 通知...")
-            
+
             # 方法1: 使用 ctypes 显示消息框（最可靠）
             try:
                 import ctypes
                 logger.info("  使用 ctypes 消息框")
                 # 使用 MB_SYSTEMMODAL 让对话框置顶
-                ctypes.windll.user32.MessageBoxW(0, message, title, 0x1000)  # MB_SYSTEMMODAL
+                ctypes.windll.user32.MessageBoxW(
+                    0, message, title, 0x1000)  # MB_SYSTEMMODAL
                 logger.info("  ctypes 消息框显示成功")
                 return True
             except Exception as e:
                 logger.error(f"  ctypes 消息框失败: {e}")
-                
+
             # 方法2: 使用 plyer
             if PLYER_AVAILABLE:
                 try:
@@ -128,7 +129,7 @@ class SystemNotifier:
                     return True
                 except Exception as e:
                     logger.error(f"  plyer 通知失败: {e}")
-                    
+
             # 方法3: 使用 win10toast（如果可用）
             try:
                 from win10toast import ToastNotifier
@@ -141,19 +142,19 @@ class SystemNotifier:
                 logger.info("  win10toast 不可用")
             except Exception as e:
                 logger.error(f"  win10toast 失败: {e}")
-                
+
             logger.error("  所有 Windows 通知方法都失败了")
             return self._fallback_notify(title, message)
-            
+
         except Exception as e:
             logger.error(f"  Windows 通知失败: {e}")
             return False
-    
+
     def _linux_notify(self, title: str, message: str, timeout: int) -> bool:
         """Linux 系统通知（使用 notify-send）- 增强版"""
         try:
             logger.info("  尝试 Linux 通知...")
-            
+
             # 方法1: 使用 plyer
             if PLYER_AVAILABLE:
                 try:
@@ -168,13 +169,13 @@ class SystemNotifier:
                     return True
                 except Exception as e:
                     logger.error(f"  plyer 通知失败: {e}")
-            
+
             # 方法2: 使用 notify-send 命令
             try:
                 logger.info("  使用 notify-send 命令")
                 result = subprocess.run([
-                    "notify-send", 
-                    title, 
+                    "notify-send",
+                    title,
                     message,
                     f"--expire-time={timeout * 1000}",
                     "--urgency=normal",
@@ -190,7 +191,7 @@ class SystemNotifier:
                 logger.warning("  未找到 notify-send 命令")
             except Exception as e:
                 logger.error(f"  notify-send 异常: {e}")
-                    
+
             # 方法3: 使用 zenity（Gnome 桌面）
             try:
                 logger.info("  尝试使用 zenity")
@@ -208,36 +209,36 @@ class SystemNotifier:
                 logger.info("  zenity 不可用")
             except Exception as e:
                 logger.error(f"  zenity 异常: {e}")
-                
+
             logger.error("  所有 Linux 通知方法都失败了")
             return self._fallback_notify(title, message)
-            
+
         except Exception as e:
             logger.error(f"  Linux 通知失败: {e}")
             return False
-    
+
     def _fallback_notify(self, title: str, message: str) -> bool:
         """备用通知方案 - 增强版"""
         try:
             logger.info("  使用备用通知方案")
-            
+
             # 方法1: 使用 tkinter 对话框
             try:
                 import tkinter as tk
                 from tkinter import messagebox
-                
+
                 # 创建隐藏的根窗口
                 root = tk.Tk()
                 root.withdraw()
                 root.attributes('-topmost', True)  # 置顶
-                
+
                 messagebox.showinfo(title, message)
                 root.destroy()
                 logger.info("  tkinter 对话框显示成功")
                 return True
             except Exception as e:
                 logger.error(f"  tkinter 对话框失败: {e}")
-                
+
             # 方法2: 使用控制台输出
             print(f"\n{'='*50} - reminder.py:242")
             print(f"🔔 {title} - reminder.py:243")
@@ -245,7 +246,7 @@ class SystemNotifier:
             print(f"{'='*50}\n - reminder.py:245")
             logger.info("  已输出到控制台")
             return True
-            
+
         except Exception as e:
             logger.error(f"  备用通知方案失败: {e}")
             # 最终备用：简单的打印
@@ -255,7 +256,7 @@ class SystemNotifier:
 
 class ReminderService:
     """复习提醒服务 - 整合系统通知和App弹窗"""
-    
+
     def __init__(self, db_manager):
         self.db_manager = db_manager
         self.system_notifier = SystemNotifier()
@@ -264,48 +265,48 @@ class ReminderService:
         self.reminder_thread = None
         self.logger = logging.getLogger(__name__)
         self.current_user_id = None
-        
+
     def start_reminder(self, user_id: Optional[int] = None) -> Dict[str, Any]:
         """启动提醒服务（后台线程）"""
         if self.is_running:
             return {"success": False, "msg": "提醒服务已在运行"}
-        
+
         self.is_running = True
         self.current_user_id = user_id
-        
+
         # 启动后台线程
         self.reminder_thread = threading.Thread(
-            target=self._reminder_loop, 
+            target=self._reminder_loop,
             daemon=True,
             name="ReminderService"
         )
         self.reminder_thread.start()
-        
+
         self.logger.info(f"提醒服务已启动，用户ID: {user_id}，检查间隔: {self.reminder_interval}秒")
         return {"success": True, "msg": "提醒服务已启动"}
-    
+
     def stop_reminder(self) -> Dict[str, Any]:
         """停止提醒服务"""
         self.is_running = False
         if self.reminder_thread and self.reminder_thread.is_alive():
             self.reminder_thread.join(timeout=5.0)
-        
+
         self.logger.info("提醒服务已停止")
         return {"success": True, "msg": "提醒服务已停止"}
-    
+
     def set_reminder_interval(self, interval_seconds: int) -> Dict[str, Any]:
         """设置提醒检查间隔"""
         if interval_seconds < 10:
             return {"success": False, "msg": "间隔时间不能少于10秒"}
-        
+
         self.reminder_interval = interval_seconds
         self.logger.info(f"提醒检查间隔已设置为: {interval_seconds}秒")
         return {"success": True, "msg": f"提醒间隔已设置为{interval_seconds}秒"}
-    
+
     def _reminder_loop(self):
         """提醒循环：定时检查并发送提醒"""
         self.logger.info("提醒服务循环开始运行")
-        
+
         while self.is_running:
             try:
                 self._check_and_send_reminders()
@@ -317,43 +318,43 @@ class ReminderService:
             except Exception as e:
                 self.logger.error(f"提醒循环异常: {e}")
                 time.sleep(60)  # 出错后等待1分钟
-        
+
         self.logger.info("提醒服务循环结束")
-    
+
     def _check_and_send_reminders(self):
         """检查待提醒计划并发送"""
         try:
             if not self.current_user_id:
                 self.logger.debug("未设置用户ID，跳过提醒检查")
                 return
-            
+
             pending_reviews = self._get_pending_reviews(self.current_user_id)
-            
+
             if not pending_reviews:
                 self.logger.debug("没有待复习的计划")
                 return
-            
+
             self.logger.info(f"找到 {len(pending_reviews)} 个待复习计划")
-            
+
             # 为每个待复习项发送提醒
             for review in pending_reviews:
                 self.logger.info(f"准备发送提醒: {review['title']}")
                 self._send_reminder_notification(review)
-                
+
         except Exception as e:
             self.logger.error(f"检查提醒失败: {e}")
-    
+
     def _get_pending_reviews(self, user_id: int) -> List[Dict[str, Any]]:
         """获取待复习的计划 - 改进版：正确识别延迟后的复习计划"""
         try:
             session = self.db_manager.get_session()
-            
+
             # 获取当前时间
             now = datetime.now()
-            
+
             # 查询待复习的计划（计划时间已到且未完成）
             from src.database.models import ReviewSchedule, KnowledgeItem
-            
+
             pending_reviews = (
                 session.query(ReviewSchedule, KnowledgeItem)
                 .join(KnowledgeItem, ReviewSchedule.knowledge_item_id == KnowledgeItem.id)
@@ -365,12 +366,12 @@ class ReminderService:
                 .order_by(ReviewSchedule.scheduled_date.asc())
                 .all()
             )
-            
+
             result = []
             for schedule, knowledge in pending_reviews:
                 # 检查是否是延迟后的计划
                 is_delayed = self._is_delayed_schedule(schedule, now)
-                
+
                 result.append({
                     'schedule_id': schedule.id,
                     'knowledge_id': knowledge.id,
@@ -382,22 +383,23 @@ class ReminderService:
                     'is_delayed': is_delayed,
                     'original_stage': schedule.interval_index
                 })
-            
+
             session.close()
-            
+
             if result:
-                self.logger.info(f"找到 {len(result)} 个待复习计划，其中 {sum(1 for r in result if r['is_delayed'])} 个是延迟计划")
-            
+                self.logger.info(
+                    f"找到 {len(result)} 个待复习计划，其中 {sum(1 for r in result if r['is_delayed'])} 个是延迟计划")
+
             return result
-            
+
         except Exception as e:
             self.logger.error(f"获取待复习计划失败: {e}")
             return []
-    
+
     def _is_delayed_schedule(self, schedule, current_time: datetime) -> bool:
         """
         判断是否是延迟后的复习计划
-        
+
         延迟计划的判断标准：
         1. 计划时间比当前时间早超过1小时
         2. 且不是第一次复习（interval_index > 0）
@@ -406,81 +408,81 @@ class ReminderService:
         try:
             # 计算计划时间与当前时间的差值
             time_diff = current_time - schedule.scheduled_date
-            
+
             # 如果计划时间比当前时间早超过1小时，认为是延迟计划
             if time_diff > timedelta(hours=1):
                 return True
-            
+
             # 对于非第一次复习的计划，如果延迟超过30分钟也认为是延迟
             if schedule.interval_index > 0 and time_diff > timedelta(minutes=30):
                 return True
-                
+
             return False
-            
+
         except Exception as e:
             self.logger.warning(f"判断延迟计划时出错: {e}")
             return False
-    
+
     def _get_stage_label(self, interval_index: int) -> str:
         """获取阶段标签"""
         stages = {
             0: "立即复习",
             1: "1小时后",
-            2: "睡前复习", 
+            2: "睡前复习",
             3: "第2天",
             4: "第4天",
             5: "第7天",
             6: "第15天"
         }
         return stages.get(interval_index, f"第{interval_index + 1}阶段")
-    
+
     def _send_reminder_notification(self, review: Dict[str, Any]):
         """发送复习提醒通知 - 改进版：包含延迟信息"""
         try:
             title = "📚 智能复习提醒"
-            
+
             # 格式化时间
             scheduled_date = review['scheduled_date']
             if hasattr(scheduled_date, 'strftime'):
                 time_str = scheduled_date.strftime('%m-%d %H:%M')
             else:
                 time_str = str(scheduled_date)
-            
+
             # 构建消息内容
             base_message = f"【{review['stage_label']}】{review['title']}\n内容: {review['content']}\n计划时间: {time_str}"
-            
+
             # 如果是延迟计划，添加延迟提示
             if review.get('is_delayed', False):
                 delay_note = "\n⚠️ 这是延迟的复习计划，请尽快完成！"
                 message = base_message + delay_note
             else:
                 message = base_message
-                
+
             message += "\n请及时复习以巩固记忆～"
-            
+
             # 根据提醒渠道发送
             if review.get("reminder_channel") == "app" and PLYER_AVAILABLE:
                 success = self._send_app_notification(title, message)
             else:
                 # 默认使用系统通知
                 success = self.system_notifier.notify(title, message, timeout=15)
-            
+
             if success:
                 delay_status = "（延迟）" if review.get('is_delayed') else ""
                 self.logger.info(f"✅ 已发送复习提醒{delay_status}: {review['title']}")
             else:
                 self.logger.warning(f"❌ 发送复习提醒失败: {review['title']}")
-                
+
         except Exception as e:
             self.logger.error(f"发送提醒通知失败: {e}")
-    
+
     def _send_app_notification(self, title: str, message: str) -> bool:
         """发送App桌面通知（使用plyer）"""
         try:
             if not PLYER_AVAILABLE:
                 self.logger.warning("plyer 不可用，无法发送App通知")
                 return False
-                
+
             notification.notify(
                 title=title,
                 message=message,
@@ -493,7 +495,7 @@ class ReminderService:
         except Exception as e:
             self.logger.error(f"App提醒发送失败: {str(e)}")
             return False
-    
+
     def send_test_notification(self) -> Dict[str, Any]:
         """发送测试通知"""
         try:
@@ -503,17 +505,17 @@ class ReminderService:
                 "智能复习闹钟提醒服务运行正常。\n"
                 "系统将按时提醒您复习知识点。"
             )
-            
+
             success = self.system_notifier.notify(title, message, timeout=10)
-            
+
             if success:
                 return {"success": True, "msg": "测试通知发送成功"}
             else:
                 return {"success": False, "msg": "测试通知发送失败"}
-                
+
         except Exception as e:
             return {"success": False, "msg": f"测试通知异常: {str(e)}"}
-    
+
     def get_service_status(self) -> Dict[str, Any]:
         """获取服务状态"""
         return {
@@ -542,7 +544,7 @@ def test_notification():
     """测试通知功能"""
     notifier = SystemNotifier()
     success = notifier.notify(
-        "🔔 测试通知", 
+        "🔔 测试通知",
         "这是一条测试系统通知！\n智能复习闹钟提醒您按时复习。"
     )
     print(f"通知测试: {'✅ 成功' if success else '❌ 失败'} - reminder.py:548")
@@ -555,7 +557,7 @@ if __name__ == "__main__":
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
-    
+
     # 测试通知功能
     print("🔔 测试系统提醒功能... - reminder.py:560")
     test_notification()

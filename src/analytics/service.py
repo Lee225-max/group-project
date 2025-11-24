@@ -1,22 +1,20 @@
 # -*- codeing =utf-8 -*-
-# @Time : 2025/11/24 0:53
+from typing import Dict, List, Any  # @Time : 2025/11/24 0:53
 # @Author: Muncy
 # @File : service.py
 # @Software: PyCharm
 """
 统计分析服务
 """
-from __future__ import annotations
 
 import base64
 import os
 from datetime import datetime, timedelta
 from io import BytesIO
-from typing import Any, Dict, List
 
-#import matplotlib
+# import matplotlib
 
-#matplotlib.use('Agg')  # 使用非交互式后端
+# matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 
@@ -24,6 +22,7 @@ from src.database.manager import DatabaseManager
 from src.database.models import KnowledgeItem, ReviewRecord, ReviewSchedule
 
 plt.switch_backend("Agg")  # 使用非交互式后端
+
 
 class AnalyticsService:
     """统计分析服务实现"""
@@ -61,9 +60,6 @@ class AnalyticsService:
                 return font_path
         return None
 
-
-    def get_user_stats(self, user_id: int) -> Dict[str, Any]:
-        """获取用户学习统计数据"""
         session = self.db_manager.get_session()
         try:
             # 总知识点数量
@@ -84,7 +80,8 @@ class AnalyticsService:
             # 已完成复习数量
             completed_reviews = (session.query(ReviewRecord).filter(
                 ReviewRecord.knowledge_item_id.in_(
-                    session.query(KnowledgeItem.id).filter(KnowledgeItem.user_id == user_id)
+                    session.query(KnowledgeItem.id).filter(
+                        KnowledgeItem.user_id == user_id)
                 )
             ).count())
 
@@ -92,13 +89,15 @@ class AnalyticsService:
             thirty_days_ago = datetime.now() - timedelta(days=30)
             recent_records = (session.query(ReviewRecord).filter(
                 ReviewRecord.knowledge_item_id.in_(
-                    session.query(KnowledgeItem.id).filter(KnowledgeItem.user_id == user_id)
+                    session.query(KnowledgeItem.id).filter(
+                        KnowledgeItem.user_id == user_id)
                 ),
                 ReviewRecord.review_date >= thirty_days_ago
             ).all())
 
             if recent_records:
-                avg_recall_score = sum(record.recall_score or 0 for record in recent_records) / len(recent_records)
+                avg_recall_score = sum(
+                    record.recall_score or 0 for record in recent_records) / len(recent_records)
                 retention_rate = avg_recall_score * 100
             else:
                 retention_rate = 0
@@ -183,7 +182,8 @@ class AnalyticsService:
                 ReviewRecord.recall_score
             ).filter(
                 ReviewRecord.knowledge_item_id.in_(
-                    session.query(KnowledgeItem.id).filter(KnowledgeItem.user_id == user_id)
+                    session.query(KnowledgeItem.id).filter(
+                        KnowledgeItem.user_id == user_id)
                 ),
                 ReviewRecord.review_date >= thirty_days_ago,
             ).all())
@@ -206,7 +206,8 @@ class AnalyticsService:
             dates = [thirty_days_ago.date() + timedelta(days=i) for i in range(31)]
             review_counts = [date_counts.get(date, 0) for date in dates]
             avg_scores = [
-                round(sum(date_scores.get(date, [0])) / len(date_scores.get(date, [1])), 2)
+                round(sum(date_scores.get(date, [0])) /
+                      len(date_scores.get(date, [1])), 2)
                 if date in date_scores
                 else 0
                 for date in dates
@@ -271,7 +272,7 @@ class AnalyticsService:
                 KnowledgeItem.is_active,
             ).all())
 
-            stats: Dict[str, int] = {}#stats = {}
+            stats: Dict[str, int] = {}  # stats = {}
             for category, item_id in category_stats:
                 cat_name = category or "未分类"
                 stats[cat_name] = stats.get(cat_name, 0) + 1
@@ -287,7 +288,8 @@ class AnalyticsService:
         try:
             effectiveness_data = (session.query(ReviewRecord.effectiveness).filter(
                 ReviewRecord.knowledge_item_id.in_(
-                    session.query(KnowledgeItem.id).filter(KnowledgeItem.user_id == user_id)
+                    session.query(KnowledgeItem.id).filter(
+                        KnowledgeItem.user_id == user_id)
                 ),
                 ReviewRecord.effectiveness.isnot(None),
             ).all())
@@ -295,7 +297,7 @@ class AnalyticsService:
             if not effectiveness_data:
                 return {}
 
-            effectiveness_counts: Dict[int, int] = {}#effectiveness_counts = {}
+            effectiveness_counts: Dict[int, int] = {}  # effectiveness_counts = {}
             for eff in effectiveness_data:
                 effectiveness_counts[eff[0]] = effectiveness_counts.get(eff[0], 0) + 1
 

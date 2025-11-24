@@ -37,7 +37,8 @@ class SchedulerService:
                 else:
                     print(f"对象属性: {dir(review)} - service.py:38")
                     print(f"ID: {getattr(review, 'id', 'N/A')} - service.py:39")
-                    print(f"知识点ID: {getattr(review , 'knowledge_item_id' , 'N/A')} - service.py:40")
+                    print(
+                        f"知识点ID: {getattr(review, 'knowledge_item_id', 'N/A')} - service.py:40")
                     print(f"标题: {getattr(review, 'title', 'N/A')} - service.py:41")
 
             return reviews
@@ -172,27 +173,29 @@ class SchedulerService:
             current_schedule = session.query(ReviewSchedule).filter(
                 ReviewSchedule.id == schedule_id
             ).first()
-        
+
             if not current_schedule:
                 print(f"❌ [DELAY DEBUG] 未找到复习计划: {schedule_id} - service.py:177")
                 session.close()
                 return False
-        
+
             # 计算新的提醒时间（当前时间 + 延迟分钟）
             new_reminder_time = datetime.now() + timedelta(minutes=delay_minutes)
-        
+
             # 更新复习计划的安排时间
-            success = self.db_manager.update_review_schedule_time(schedule_id, new_reminder_time)
-            
+            success = self.db_manager.update_review_schedule_time(
+                schedule_id, new_reminder_time)
+
             session.close()  # 关闭会话
-        
+
             if success:
-                print(f"✅ [DELAY DEBUG] 已延迟复习计划 {schedule_id}，新的提醒时间: {new_reminder_time} - service.py:190")
+                print(
+                    f"✅ [DELAY DEBUG] 已延迟复习计划 {schedule_id}，新的提醒时间: {new_reminder_time} - service.py:190")
                 return True
             else:
                 print(f"❌ [DELAY DEBUG] 延迟复习计划失败: {schedule_id} - service.py:193")
                 return False
-            
+
         except Exception as e:
             print(f"❌ [DELAY DEBUG] 延迟复习时出错: {e} - service.py:197")
             return False

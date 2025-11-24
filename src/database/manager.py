@@ -130,7 +130,8 @@ class DatabaseManager:
                 print(f"关联的复习计划数量: {len(schedules)} - manager.py:130")
 
                 for s in schedules:
-                    print(f"计划 {s.id}: 时间={s.scheduled_date}, 完成={s.completed} - manager.py:133")
+                    print(
+                        f"计划 {s.id}: 时间={s.scheduled_date}, 完成={s.completed} - manager.py:133")
 
                 # 检查是否今日复习
                 today_schedule = (
@@ -171,7 +172,8 @@ class DatabaseManager:
                     )
                     status = f"📅 今日复习（{stage_desc}）"
                     next_stage_desc = stage_desc
-                    next_time_str = today_schedule.scheduled_date.strftime("%Y-%m-%d %H:%M")
+                    next_time_str = today_schedule.scheduled_date.strftime(
+                        "%Y-%m-%d %H:%M")
                 else:
                     next_stage_desc = None
                     next_time_str = None
@@ -188,7 +190,8 @@ class DatabaseManager:
                         stage_desc = EbbinghausConfig.get_stage_description(
                             next_schedule.interval_index
                         )
-                        next_time_str = next_schedule.scheduled_date.strftime("%Y-%m-%d %H:%M")
+                        next_time_str = next_schedule.scheduled_date.strftime(
+                            "%Y-%m-%d %H:%M")
                         status = f"⏳ 待复习（{stage_desc}，{next_time_str}）"
                         next_stage_desc = stage_desc
                     else:
@@ -457,7 +460,7 @@ class DatabaseManager:
             return {"success": False, "msg": f"提交失败：{str(e)}"}
         finally:
             session.close()
-    
+
     def update_review_schedule_time(self, schedule_id: int, new_time: datetime) -> bool:
         """更新复习计划的安排时间"""
         session = self.get_session()
@@ -465,11 +468,12 @@ class DatabaseManager:
             schedule = session.query(ReviewSchedule).filter(
                 ReviewSchedule.id == schedule_id
             ).first()
-        
+
             if schedule:
                 schedule.scheduled_date = new_time
                 session.commit()
-                print(f"✅ [DELAY DEBUG] 已更新复习计划 {schedule_id} 时间为 {new_time} - manager.py:472")
+                print(
+                    f"✅ [DELAY DEBUG] 已更新复习计划 {schedule_id} 时间为 {new_time} - manager.py:472")
                 return True
             print(f"❌ [DELAY DEBUG] 未找到复习计划: {schedule_id} - manager.py:474")
             return False
@@ -484,41 +488,45 @@ class DatabaseManager:
         """取消知识点的复习计划"""
         session = self.get_session()
         try:
-            print(f"🔍 [CANCEL DEBUG] 开始取消知识点 {knowledge_item_id} 的复习计划 - manager.py:487")
-            
+            print(
+                f"🔍 [CANCEL DEBUG] 开始取消知识点 {knowledge_item_id} 的复习计划 - manager.py:487")
+
             # 1. 查找该知识点的所有未完成的复习计划
             from .models import ReviewSchedule, KnowledgeItem
-            
+
             pending_schedules = session.query(ReviewSchedule).filter(
                 ReviewSchedule.knowledge_item_id == knowledge_item_id,
                 ReviewSchedule.user_id == user_id,
                 ~ReviewSchedule.completed
             ).all()
-            
-            print(f"🔍 [CANCEL DEBUG] 找到 {len(pending_schedules)} 个未完成的复习计划 - manager.py:498")
-            
+
+            print(
+                f"🔍 [CANCEL DEBUG] 找到 {len(pending_schedules)} 个未完成的复习计划 - manager.py:498")
+
             # 2. 删除这些复习计划
             for schedule in pending_schedules:
                 session.delete(schedule)
                 print(f"🗑️ [CANCEL DEBUG] 删除复习计划 ID: {schedule.id} - manager.py:503")
-            
+
             # 3. 重置知识点的复习状态（保留历史记录）
             knowledge_item = session.query(KnowledgeItem).filter(
                 KnowledgeItem.id == knowledge_item_id,
                 KnowledgeItem.user_id == user_id
             ).first()
-            
+
             if knowledge_item:
                 # 注意：我们不重置 review_count，因为这是历史记录
                 # 知识点会回到"无复习计划"状态
-                print(f"🔄 [CANCEL DEBUG] 重置知识点 {knowledge_item_id} 的复习状态 - manager.py:514")
-            
+                print(
+                    f"🔄 [CANCEL DEBUG] 重置知识点 {knowledge_item_id} 的复习状态 - manager.py:514")
+
             session.commit()
             session.close()
-            
-            print(f"✅ [CANCEL DEBUG] 已成功取消知识点 {knowledge_item_id} 的复习计划 - manager.py:519")
+
+            print(
+                f"✅ [CANCEL DEBUG] 已成功取消知识点 {knowledge_item_id} 的复习计划 - manager.py:519")
             return True
-            
+
         except Exception as e:
             print(f"❌ [CANCEL DEBUG] 取消复习计划失败: {e} - manager.py:523")
             session.rollback()

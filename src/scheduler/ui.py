@@ -4,7 +4,7 @@
 
 import customtkinter as ctk
 from tkinter import messagebox
-from datetime import datetime, timedelta
+# from datetime import datetime, timedelta
 from .service import SchedulerService
 from src.database.models import KnowledgeItem
 
@@ -12,10 +12,11 @@ from src.database.models import KnowledgeItem
 class ReviewDialog(ctk.CTkToplevel):
     """复习对话框 - 采用知识管理页面样式"""
 
-    def __init__(self, parent, review, current_user,scheduler_service, db_manager, refresh_callback):
+    # def __init__(self, parent, review, current_user,scheduler_service, db_manager, refresh_callback):
+    def __init__(self, parent, review, scheduler_service, db_manager, refresh_callback):
         super().__init__(parent)
         self.review = review
-        self.current_user = current_user
+        # self.current_user = current_user
         self.scheduler_service = scheduler_service
         self.db_manager = db_manager
         self.refresh_callback = refresh_callback
@@ -91,7 +92,7 @@ class ReviewDialog(ctk.CTkToplevel):
             knowledge_item_id = self.review.get(
                 'knowledge_item_id') or self.review.get('knowledge_id')
             if not knowledge_item_id:
-                print("❌ 无法获取知识点ID - ui.py:94")
+                print("❌ 无法获取知识点ID - ui.py:95")
                 return
 
             self.knowledge_item = (
@@ -100,9 +101,9 @@ class ReviewDialog(ctk.CTkToplevel):
                 .first()
             )
             if not self.knowledge_item:
-                print(f"❌ 找不到知识点: ID {knowledge_item_id} - ui.py:103")
+                print(f"❌ 找不到知识点: ID {knowledge_item_id} - ui.py:104")
         except Exception as e:
-            print(f"❌ 加载知识点失败: {e} - ui.py:105")
+            print(f"❌ 加载知识点失败: {e} - ui.py:106")
         finally:
             session.close()
 
@@ -114,7 +115,8 @@ class ReviewDialog(ctk.CTkToplevel):
             return
 
         # 主容器
-        main_container = ctk.CTkFrame(self, fg_color=self.colors['light'], corner_radius=15)
+        main_container = ctk.CTkFrame(
+            self, fg_color=self.colors['light'], corner_radius=15)
         main_container.pack(fill="both", expand=True, padx=20, pady=20)
 
         # 标题
@@ -164,7 +166,8 @@ class ReviewDialog(ctk.CTkToplevel):
         content_text.configure(state="disabled")  # 只读模式
 
         # 回忆程度评估卡片
-        evaluation_card = ctk.CTkFrame(main_container, fg_color="white", corner_radius=12)
+        evaluation_card = ctk.CTkFrame(
+            main_container, fg_color="white", corner_radius=12)
         evaluation_card.pack(fill="x", padx=20, pady=(0, 20))
 
         ctk.CTkLabel(
@@ -232,7 +235,7 @@ class ReviewDialog(ctk.CTkToplevel):
             font=ctk.CTkFont(size=14, weight="bold")
         )
         complete_btn.grid(row=0, column=0, padx=(0, 10))
-        
+
         # 稍后复习按钮（真正的延迟功能）
         delay_btn = ctk.CTkButton(
             button_frame,
@@ -241,10 +244,10 @@ class ReviewDialog(ctk.CTkToplevel):
             height=45,
             fg_color=self.colors['warning'],
             hover_color='#E0A800',
-            font=ctk.CTkFont(size=14, weight="bold")    
+            font=ctk.CTkFont(size=14, weight="bold")
         )
         delay_btn.grid(row=0, column=1, padx=10)
-        
+
         # 取消复习按钮 - 新增功能
         cancel_review_btn = ctk.CTkButton(
             button_frame,
@@ -261,7 +264,7 @@ class ReviewDialog(ctk.CTkToplevel):
         """滑块值改变回调"""
         score_percent = int(value * 100)
         self.recall_score = value
-        
+
         # 根据分数改变颜色
         if score_percent >= 80:
             color = self.colors['success']
@@ -271,7 +274,7 @@ class ReviewDialog(ctk.CTkToplevel):
             color = self.colors['warning']
         else:
             color = self.colors['danger']
-            
+
         self.score_label.configure(
             text=f"回忆分数: {score_percent}%",
             text_color=color
@@ -286,8 +289,8 @@ class ReviewDialog(ctk.CTkToplevel):
 
             # 获取复习计划ID和知识点ID
             schedule_id = self.review.get('id') or self.review.get('schedule_id')
-            knowledge_id = self.review.get(
-                'knowledge_item_id') or self.review.get('knowledge_id')
+
+            # knowledge_id = self.review.get('knowledge_item_id') or self.review.get('knowledge_id')
 
             if not schedule_id:
                 messagebox.showerror("错误", "无法获取复习计划ID")
@@ -310,7 +313,7 @@ class ReviewDialog(ctk.CTkToplevel):
 
         except Exception as e:
             messagebox.showerror("错误", f"复习完成失败: {str(e)}")
-    
+
     def delay_review(self):
         """延迟复习回调函数"""
         try:
@@ -322,84 +325,86 @@ class ReviewDialog(ctk.CTkToplevel):
 
             # 显示确认对话框
             msg = messagebox.askyesno(
-                "稍后复习", 
+                "稍后复习",
                 "确定要20分钟后再次提醒复习吗？"
             )
-        
+
             if msg:
                 # 调用服务延迟复习
-                success = self.scheduler_service.delay_review(schedule_id, delay_minutes=20)
-            
+                success = self.scheduler_service.delay_review(
+                    schedule_id, delay_minutes=20)
+
                 if success:
                     # 显示成功消息
                     messagebox.showinfo(
-                        "成功", 
+                        "成功",
                         "已设置20分钟后再次提醒复习！"
                     )
-                
+
                     # 刷新父窗口的复习列表
                     if self.refresh_callback:
                         self.refresh_callback()
-                
+
                     # 关闭对话框
                     self.destroy()
-                
-                    print(f"✅ [DELAY DEBUG] 已延迟复习计划: {schedule_id} - ui.py:347")
+
+                    print(f"✅ [DELAY DEBUG] 已延迟复习计划: {schedule_id} - ui.py:348")
                 else:
                     messagebox.showerror(
-                        "错误", 
+                        "错误",
                         "延迟复习失败，请重试。"
                     )
-                    print(f"❌ [DELAY DEBUG] 延迟复习失败: {schedule_id} - ui.py:353")
-                
+                    print(f"❌ [DELAY DEBUG] 延迟复习失败: {schedule_id} - ui.py:354")
+
         except Exception as e:
-            print(f"❌ [DELAY DEBUG] 延迟复习回调出错: {e} - ui.py:356")
+            print(f"❌ [DELAY DEBUG] 延迟复习回调出错: {e} - ui.py:357")
             messagebox.showerror(
-                "错误", 
+                "错误",
                 f"延迟复习时出错: {e}"
             )
-    
+
     def cancel_review(self):
         """取消复习计划 - 新增功能"""
         try:
             # 确认取消
             if not messagebox.askyesno(
-                "确认取消", 
+                "确认取消",
                 "确定要取消这个知识点的复习计划吗？\n\n该知识点将：\n• 从今日复习列表中移除\n• 回到知识管理列表\n• 状态变为'无复习计划'\n• 可以重新开始复习",
                 icon="warning"
             ):
                 return
-            
+
             # 获取知识点ID
-            knowledge_item_id = self.review.get('knowledge_item_id') or self.review.get('knowledge_id')
+            knowledge_item_id = self.review.get(
+                'knowledge_item_id') or self.review.get('knowledge_id')
             if not knowledge_item_id:
                 messagebox.showerror("错误", "无法获取知识点ID")
                 return
-            
+
             # 调用数据库管理器取消复习计划
             success = self.db_manager.cancel_review_schedule(
                 knowledge_item_id=knowledge_item_id,
                 user_id=self.current_user.id
             )
-            
+
             if success:
                 # 关闭复习窗口
                 self.destroy()
-                
+
                 # 刷新主界面
                 if self.refresh_callback:
                     self.refresh_callback()
-                
+
                 # 显示成功消息
                 messagebox.showinfo(
-                    "取消成功", 
+                    "取消成功",
                     "✅ 已取消该知识点的复习计划\n\n现在可以在知识管理中重新开始复习。"
                 )
             else:
                 messagebox.showerror("取消失败", "取消复习计划失败，请重试。")
-                
+
         except Exception as e:
-            print(f"❌ 取消复习时出错: {e} - ui.py:402")
+            print(f"❌ 取消复习时出错: {e} - ui.py:403")
             messagebox.showerror("错误", f"取消复习时出错: {str(e)}")
 
 
@@ -429,13 +434,13 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
         self.current_widgets = []
         self.empty_label = None
 
-        print(f"🎯 今日复习界面初始化完成  用户ID: {self.current_user.id} - ui.py:432")
+        print(f"🎯 今日复习界面初始化完成  用户ID: {self.current_user.id} - ui.py:433")
 
         self.create_widgets()
-        print("🎯 今日复习界面组件创建完成 - ui.py:435")
+        print("🎯 今日复习界面组件创建完成 - ui.py:436")
 
         self.load_today_reviews()
-        print("🎯 今日复习界面数据加载完成 - ui.py:438")
+        print("🎯 今日复习界面数据加载完成 - ui.py:439")
 
     def create_widgets(self):
         """创建界面组件 - 采用知识管理页面样式"""
@@ -444,7 +449,8 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
         self.grid_rowconfigure(1, weight=1)
 
         # 主控制栏（与知识管理页面一致）
-        control_frame = ctk.CTkFrame(self, fg_color=self.colors['light'], corner_radius=10)
+        control_frame = ctk.CTkFrame(
+            self, fg_color=self.colors['light'], corner_radius=10)
         control_frame.grid(row=0, column=0, sticky="ew", padx=8, pady=5)
         control_frame.grid_columnconfigure(1, weight=1)
 
@@ -534,16 +540,16 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                 except Exception:
                     continue
         except Exception as e:
-            print(f"清除组件时出错: {e} - ui.py:537")
+            print(f"清除组件时出错: {e} - ui.py:538")
 
     def load_today_reviews(self):
         """加载今日复习计划"""
-        print("🔄 今日复习界面开始加载数据 - ui.py:541")
+        print("🔄 今日复习界面开始加载数据 - ui.py:542")
         # 安全地清除现有内容
         self.clear_widgets()
 
         try:
-            print(f"🔍 调用调度器服务获取今日复习计划，用户ID: {self.current_user.id} - ui.py:546")
+            print(f"🔍 调用调度器服务获取今日复习计划，用户ID: {self.current_user.id} - ui.py:547")
 
             # 尝试不同的方法名来获取今日复习计划
             today_reviews = []
@@ -552,17 +558,17 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
             if hasattr(self.scheduler_service, 'get_today_review_plans'):
                 today_reviews = self.scheduler_service.get_today_review_plans(
                     self.current_user.id)
-                print("✅ 使用 get_today_review_plans 方法 - ui.py:555")
+                print("✅ 使用 get_today_review_plans 方法 - ui.py:556")
             # 方法2: 尝试 get_today_reviews
             elif hasattr(self.scheduler_service, 'get_today_reviews'):
                 today_reviews = self.scheduler_service.get_today_reviews(
                     self.current_user.id)
-                print("✅ 使用 get_today_reviews 方法 - ui.py:560")
+                print("✅ 使用 get_today_reviews 方法 - ui.py:561")
             else:
-                print("❌ 调度器服务中没有找到获取今日复习计划的方法 - ui.py:562")
+                print("❌ 调度器服务中没有找到获取今日复习计划的方法 - ui.py:563")
                 today_reviews = []
 
-            print(f"📊 今日复习界面收到 {len(today_reviews)} 个复习计划 - ui.py:565")
+            print(f"📊 今日复习界面收到 {len(today_reviews)} 个复习计划 - ui.py:566")
 
             if not today_reviews:
                 # 创建空状态提示 - 采用知识管理页面样式
@@ -581,7 +587,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                     text_color=self.colors['dark']
                 )
                 self.empty_label.grid(row=0, column=0, pady=10)
-                
+
                 self.stats_label.configure(
                     text="🎉 今日无复习任务",
                     text_color=self.colors['success']
@@ -592,7 +598,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
             completed = sum(
                 1 for review in today_reviews if self._get_completed_status(review))
             total = len(today_reviews)
-            
+
             # 根据完成情况设置统计信息颜色
             if completed == total:
                 stats_color = self.colors['success']
@@ -603,7 +609,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
             else:
                 stats_color = self.colors['warning']
                 stats_text = f"⏳ 待开始: {completed}/{total}"
-                
+
             self.stats_label.configure(
                 text=stats_text,
                 text_color=stats_color
@@ -615,10 +621,10 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                 if review_item:
                     self.current_widgets.append(review_item)
 
-            print(f"✅ 成功创建 {len(self.current_widgets)} 个复习项目 - ui.py:618")
+            print(f"✅ 成功创建 {len(self.current_widgets)} 个复习项目 - ui.py:619")
 
         except Exception as e:
-            print(f"❌ 加载复习计划失败: {str(e)} - ui.py:621")
+            print(f"❌ 加载复习计划失败: {str(e)} - ui.py:622")
             messagebox.showerror("错误", f"加载复习计划失败: {str(e)}")
 
     def _get_completed_status(self, review):
@@ -632,7 +638,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
 
     def create_review_item(self, review, index):
         """创建复习项目UI - 采用知识管理页面卡片样式"""
-        print(f"🔧 创建复习项目: {type(review)} - ui.py:635")
+        print(f"🔧 创建复习项目: {type(review)} - ui.py:636")
 
         try:
             # 确保review是字典格式
@@ -645,7 +651,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                                      review.get('knowledge_id'))
 
                 if not knowledge_item_id:
-                    print("❌ 无法获取知识点ID - ui.py:648")
+                    print("❌ 无法获取知识点ID - ui.py:649")
                     return None
 
                 # 获取知识点信息
@@ -656,7 +662,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                 )
 
                 if not knowledge_item:
-                    print(f"❌ 找不到知识点: ID {knowledge_item_id} - ui.py:659")
+                    print(f"❌ 找不到知识点: ID {knowledge_item_id} - ui.py:660")
                     return None
 
                 is_completed = review.get('completed', False)
@@ -681,7 +687,8 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                         width=6,
                         corner_radius=3
                     )
-                    urgency_indicator.grid(row=0, column=0, rowspan=3, sticky="ns", padx=(10, 5), pady=10)
+                    urgency_indicator.grid(
+                        row=0, column=0, rowspan=3, sticky="ns", padx=(10, 5), pady=10)
 
                 # 内容区域
                 content_frame = ctk.CTkFrame(card, fg_color="transparent")
@@ -713,7 +720,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                     # 如果有阶段标签，使用阶段标签
                     status_text = review.get('stage_label', status_text)
                     status_color = self.colors['today']
-                
+
                 status_label = ctk.CTkLabel(
                     title_frame,
                     text=status_text,
@@ -762,7 +769,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                 if content_preview:
                     if len(content_preview) > 120:
                         content_preview = content_preview[:120] + "..."
-                    
+
                     content_label = ctk.CTkLabel(
                         content_frame,
                         text=content_preview,
@@ -796,12 +803,13 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                         **btn_style
                     )
                     review_btn.pack(side="left", padx=(0, 8))
-                    
+
                     # 稍后提醒按钮（直接延迟，不打开对话框）
                     delay_btn = ctk.CTkButton(
                         button_frame,
                         text="⏰ 稍后提醒",
-                        command=lambda sid=review.get('schedule_id') or review.get('id'): self.on_quick_delay(sid),
+                        command=lambda sid=review.get('schedule_id') or review.get(
+                            'id'): self.on_quick_delay(sid),
                         fg_color=self.colors['warning'],
                         hover_color='#E0A800',
                         **btn_style
@@ -819,24 +827,24 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                     )
                     detail_btn.pack(side="left", padx=(0, 8))
 
-                print(f"✅ 成功创建复习项目: {knowledge_item.title} - ui.py:822")
+                print(f"✅ 成功创建复习项目: {knowledge_item.title} - ui.py:823")
                 return card
 
             except Exception as e:
-                print(f"❌ 创建复习项目时出错: {e} - ui.py:826")
+                print(f"❌ 创建复习项目时出错: {e} - ui.py:827")
                 return None
             finally:
                 session.close()
 
         except Exception as e:
-            print(f"❌ 处理复习项目时出错: {e} - ui.py:832")
+            print(f"❌ 处理复习项目时出错: {e} - ui.py:833")
             return None
 
     def show_item_detail(self, knowledge_item):
         """显示知识点详情"""
         try:
             from src.knowledge.ui import KnowledgeItemDetailDialog
-            
+
             # 将知识点对象转换为字典格式
             item_dict = {
                 'id': knowledge_item.id,
@@ -847,7 +855,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                 'review_status': '✅ 已完成复习',
                 'is_today_review': False
             }
-            
+
             KnowledgeItemDetailDialog(self, item_dict)
         except Exception as e:
             messagebox.showerror("错误", f"打开详情失败: {str(e)}")
@@ -892,30 +900,31 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
             )
         except Exception as e:
             messagebox.showerror("错误", f"打开复习对话框失败: {str(e)}")
-            
+
     def on_quick_delay(self, schedule_id: int):
         """快速延迟复习回调"""
         try:
             if not schedule_id:
                 messagebox.showerror("错误", "无法获取复习计划ID")
                 return
-                
+
             msg = messagebox.askyesno(
-                "稍后提醒", 
+                "稍后提醒",
                 "确定要20分钟后再次提醒复习吗？"
             )
-            
+
             if msg:
-                success = self.scheduler_service.delay_review(schedule_id, delay_minutes=20)
-                
+                success = self.scheduler_service.delay_review(
+                    schedule_id, delay_minutes=20)
+
                 if success:
                     messagebox.showinfo("成功", "已设置20分钟后再次提醒复习！")
                     # 刷新复习列表
                     self.load_today_reviews()
-                    print(f"✅ [QUICK DELAY] 快速延迟成功: {schedule_id} - ui.py:915")
+                    print(f"✅ [QUICK DELAY] 快速延迟成功: {schedule_id} - ui.py:916")
                 else:
                     messagebox.showerror("错误", "延迟复习失败，请重试。")
-                    
+
         except Exception as e:
-            print(f"❌ [QUICK DELAY] 快速延迟出错: {e} - ui.py:920")
+            print(f"❌ [QUICK DELAY] 快速延迟出错: {e} - ui.py:921")
             messagebox.showerror("错误", f"延迟复习时出错: {e}")
