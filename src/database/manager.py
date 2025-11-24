@@ -16,10 +16,7 @@ from datetime import datetime, timedelta
 class DatabaseManager:
     def __init__(self, db_path="src/database/review_alarm.db"):
         self.db_path = db_path
-        self.engine = create_engine(
-            f"sqlite:///{db_path}",
-            connect_args={"check_same_thread": False}  # 允许多线程访问同一连接
-        )
+        self.engine = create_engine(f"sqlite:///{db_path}")
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)  # 自动创建表
 
@@ -215,10 +212,10 @@ class DatabaseManager:
                     }
                 )
 
-            print(f"🔍 [DEBUG] 最终返回 {len(result)} 个知识点 - manager.py:206")
+            print(f"🔍 [DEBUG] 最终返回 {len(result)} 个知识点 - manager.py:215")
             return result
         except Exception as e:
-            print(f"❌ [DEBUG] 查询出错: {e} - manager.py:209")
+            print(f"❌ [DEBUG] 查询出错: {e} - manager.py:218")
             raise
         finally:
             session.close()
@@ -235,7 +232,7 @@ class DatabaseManager:
             )
             today_end = today_start + timedelta(days=1)
 
-            print(f"🔍 [TODAY DEBUG] 查询用户 {user_id} 的今日复习计划 - manager.py:226")
+            print(f"🔍 [TODAY DEBUG] 查询用户 {user_id} 的今日复习计划 - manager.py:235")
 
             schedules = (
                 session.query(ReviewSchedule, KnowledgeItem)
@@ -252,7 +249,7 @@ class DatabaseManager:
                 .all()
             )
 
-            print(f"🔍 [TODAY DEBUG] 找到 {len(schedules)} 个今日复习计划 - manager.py:243")
+            print(f"🔍 [TODAY DEBUG] 找到 {len(schedules)} 个今日复习计划 - manager.py:252")
 
             result = []
             from src.scheduler.ebbinghaus_config import EbbinghausConfig
@@ -278,7 +275,7 @@ class DatabaseManager:
                 )
             return result
         except Exception as e:
-            print(f"❌ [TODAY DEBUG] 查询出错: {e} - manager.py:269")
+            print(f"❌ [TODAY DEBUG] 查询出错: {e} - manager.py:278")
             raise
         finally:
             session.close()
@@ -303,7 +300,7 @@ class DatabaseManager:
                 .count()
             )
 
-            print(f"🔍 [COUNT DEBUG] 用户 {user_id} 今日复习数量: {count} - manager.py:294")
+            print(f"🔍 [COUNT DEBUG] 用户 {user_id} 今日复习数量: {count} - manager.py:303")
             return count
         finally:
             session.close()
@@ -371,63 +368,71 @@ class DatabaseManager:
         finally:
             session.close()
 
-    def complete_review(self, schedule_id, user_id, effectiveness, recall_score, notes=None):
+    def complete_review(
+        self, schedule_id, user_id, effectiveness, recall_score, notes=None
+    ):
+        """完成复习+生成下次计划（艾宾浩斯核心）"""
         session = self.get_session()
         try:
-            # 1. 找到当前复习计划
-            schedule = session.query(ReviewSchedule).filter(
-                ReviewSchedule.id == schedule_id,
-                ReviewSchedule.user_id == user_id,
-                ~ReviewSchedule.completed  # 只处理未完成的计划
-            ).first()
+            # 验证复习计划
+            schedule = (
+                session.query(ReviewSchedule)
+                .filter(
+                    ReviewSchedule.id == schedule_id,
+                    ReviewSchedule.user_id == user_id,
+                    ~ReviewSchedule.completed,
+                )
+                .first()
+            )
             if not schedule:
                 return {"success": False, "msg": "复习计划不存在或已完成"}
 
-            # 2. 验证评分（无需修改）
+            # 验证评分范围
             if not (1 <= effectiveness <= 5):
                 return {"success": False, "msg": "效果评分需在1-5分之间"}
             if not (0 <= recall_score <= 100):
                 return {"success": False, "msg": "回忆分数需在0-100之间"}
 
-            # 3. 创建复习记录（关键：更新最后复习时间）
+            # 创建复习记录
             record = ReviewRecord(
                 knowledge_item_id=schedule.knowledge_item_id,
                 schedule_id=schedule_id,
                 effectiveness=effectiveness,
                 recall_score=recall_score,
                 notes=notes,
-                review_date=datetime.now()  # 明确设置当前时间（避免默认值延迟）
             )
             session.add(record)
 
-            # 4. 标记当前计划为完成（关键：今日列表会过滤已完成项）
+            # 标记当前计划完成
             schedule.completed = True
 
-            # 5. 生成下一阶段计划（关键：知识管理显示下一阶段）
+            # 艾宾浩斯间隔调整规则
             from src.scheduler.ebbinghaus_config import EbbinghausConfig
+
             current_index = schedule.interval_index
             item = schedule.knowledge_item
 
-            # 按复习效果调整下一阶段（艾宾浩斯核心逻辑）
+            # 根据效果调整阶段
             if effectiveness >= 4:
-                next_index = current_index + 1  # 效果好，进入下一阶段
+                next_index = current_index + 1
             elif effectiveness >= 2:
-                next_index = current_index  # 效果一般，重复当前阶段
+                next_index = current_index
             else:
-                next_index = max(0, current_index - 1)  # 效果差，回退阶段
+                next_index = max(0, current_index - 1)
 
-            # 若已完成所有7阶段，无需生成下一计划
+            # 限制最大阶段（避免越界）
             if next_index >= EbbinghausConfig.get_total_stages():
                 session.commit()
                 return {
                     "success": True,
                     "msg": "已完成所有艾宾浩斯阶段，知识点标记为已掌握",
-                    "data": {"is_mastered": True}
                 }
 
-            # 生成下一阶段复习计划
+            # 计算下次间隔（使用艾宾浩斯标准间隔）
             next_interval_hours = EbbinghausConfig.get_interval_hours(next_index)
-            next_review_date = datetime.now() + timedelta(hours=next_interval_hours)
+            next_review_date = EbbinghausConfig.get_next_review_date(next_index)
+
+            # 生成下次复习计划
             next_schedule = ReviewSchedule(
                 knowledge_item_id=item.id,
                 user_id=user_id,
@@ -441,16 +446,83 @@ class DatabaseManager:
 
             return {
                 "success": True,
-                "msg": f"复习完成！下次复习时间：{next_review_date.strftime('%Y-%m-%d %H:%M')}",
+                "msg": f"复习完成！下次复习时间：{next_schedule.scheduled_date.strftime('%Y-%m-%d %H:%M')}",
                 "data": {
                     "next_schedule_id": next_schedule.id,
-                    "next_review_date": next_review_date,
-                    "next_stage": next_index  # 新增：返回下一阶段，方便界面显示
-                }
+                    "next_review_date": next_schedule.scheduled_date,
+                },
             }
         except Exception as e:
             session.rollback()
             return {"success": False, "msg": f"提交失败：{str(e)}"}
+        finally:
+            session.close()
+    
+    def update_review_schedule_time(self, schedule_id: int, new_time: datetime) -> bool:
+        """更新复习计划的安排时间"""
+        session = self.get_session()
+        try:
+            schedule = session.query(ReviewSchedule).filter(
+                ReviewSchedule.id == schedule_id
+            ).first()
+        
+            if schedule:
+                schedule.scheduled_date = new_time
+                session.commit()
+                print(f"✅ [DELAY DEBUG] 已更新复习计划 {schedule_id} 时间为 {new_time} - manager.py:472")
+                return True
+            print(f"❌ [DELAY DEBUG] 未找到复习计划: {schedule_id} - manager.py:474")
+            return False
+        except Exception as e:
+            session.rollback()
+            print(f"❌ [DELAY DEBUG] 更新复习计划时间时出错: {e} - manager.py:478")
+            return False
+        finally:
+            session.close()
+
+    def cancel_review_schedule(self, knowledge_item_id: int, user_id: int) -> bool:
+        """取消知识点的复习计划"""
+        session = self.get_session()
+        try:
+            print(f"🔍 [CANCEL DEBUG] 开始取消知识点 {knowledge_item_id} 的复习计划 - manager.py:487")
+            
+            # 1. 查找该知识点的所有未完成的复习计划
+            from .models import ReviewSchedule, KnowledgeItem
+            
+            pending_schedules = session.query(ReviewSchedule).filter(
+                ReviewSchedule.knowledge_item_id == knowledge_item_id,
+                ReviewSchedule.user_id == user_id,
+                ~ReviewSchedule.completed
+            ).all()
+            
+            print(f"🔍 [CANCEL DEBUG] 找到 {len(pending_schedules)} 个未完成的复习计划 - manager.py:498")
+            
+            # 2. 删除这些复习计划
+            for schedule in pending_schedules:
+                session.delete(schedule)
+                print(f"🗑️ [CANCEL DEBUG] 删除复习计划 ID: {schedule.id} - manager.py:503")
+            
+            # 3. 重置知识点的复习状态（保留历史记录）
+            knowledge_item = session.query(KnowledgeItem).filter(
+                KnowledgeItem.id == knowledge_item_id,
+                KnowledgeItem.user_id == user_id
+            ).first()
+            
+            if knowledge_item:
+                # 注意：我们不重置 review_count，因为这是历史记录
+                # 知识点会回到"无复习计划"状态
+                print(f"🔄 [CANCEL DEBUG] 重置知识点 {knowledge_item_id} 的复习状态 - manager.py:514")
+            
+            session.commit()
+            session.close()
+            
+            print(f"✅ [CANCEL DEBUG] 已成功取消知识点 {knowledge_item_id} 的复习计划 - manager.py:519")
+            return True
+            
+        except Exception as e:
+            print(f"❌ [CANCEL DEBUG] 取消复习计划失败: {e} - manager.py:523")
+            session.rollback()
+            return False
         finally:
             session.close()
 

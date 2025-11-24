@@ -8,7 +8,7 @@ import subprocess
 import logging
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import List, Optional, Dict, Any
 
 # 尝试导入 plyer，如果不可用则使用备用方案
@@ -344,7 +344,7 @@ class ReminderService:
             self.logger.error(f"检查提醒失败: {e}")
     
     def _get_pending_reviews(self, user_id: int) -> List[Dict[str, Any]]:
-        """获取待复习的计划"""
+        """获取待复习的计划 - 改进版：正确识别延迟后的复习计划"""
         try:
             session = self.db_manager.get_session()
             
@@ -368,6 +368,9 @@ class ReminderService:
             
             result = []
             for schedule, knowledge in pending_reviews:
+                # 检查是否是延迟后的计划
+                is_delayed = self._is_delayed_schedule(schedule, now)
+                
                 result.append({
                     'schedule_id': schedule.id,
                     'knowledge_id': knowledge.id,
@@ -375,15 +378,48 @@ class ReminderService:
                     'content': knowledge.content[:100] + '...' if len(knowledge.content) > 100 else knowledge.content,
                     'scheduled_date': schedule.scheduled_date,
                     'stage_label': self._get_stage_label(schedule.interval_index),
-                    'reminder_channel': 'system'  # 默认使用系统通知
+                    'reminder_channel': 'system',  # 默认使用系统通知
+                    'is_delayed': is_delayed,
+                    'original_stage': schedule.interval_index
                 })
             
             session.close()
+            
+            if result:
+                self.logger.info(f"找到 {len(result)} 个待复习计划，其中 {sum(1 for r in result if r['is_delayed'])} 个是延迟计划")
+            
             return result
             
         except Exception as e:
             self.logger.error(f"获取待复习计划失败: {e}")
             return []
+    
+    def _is_delayed_schedule(self, schedule, current_time: datetime) -> bool:
+        """
+        判断是否是延迟后的复习计划
+        
+        延迟计划的判断标准：
+        1. 计划时间比当前时间早超过1小时
+        2. 且不是第一次复习（interval_index > 0）
+        3. 或者有其他明显的延迟特征
+        """
+        try:
+            # 计算计划时间与当前时间的差值
+            time_diff = current_time - schedule.scheduled_date
+            
+            # 如果计划时间比当前时间早超过1小时，认为是延迟计划
+            if time_diff > timedelta(hours=1):
+                return True
+            
+            # 对于非第一次复习的计划，如果延迟超过30分钟也认为是延迟
+            if schedule.interval_index > 0 and time_diff > timedelta(minutes=30):
+                return True
+                
+            return False
+            
+        except Exception as e:
+            self.logger.warning(f"判断延迟计划时出错: {e}")
+            return False
     
     def _get_stage_label(self, interval_index: int) -> str:
         """获取阶段标签"""
@@ -399,17 +435,28 @@ class ReminderService:
         return stages.get(interval_index, f"第{interval_index + 1}阶段")
     
     def _send_reminder_notification(self, review: Dict[str, Any]):
-        """发送复习提醒通知"""
+        """发送复习提醒通知 - 改进版：包含延迟信息"""
         try:
             title = "📚 智能复习提醒"
+            
             # 格式化时间
             scheduled_date = review['scheduled_date']
             if hasattr(scheduled_date, 'strftime'):
-                time_str = scheduled_date.strftime('%H:%M')
+                time_str = scheduled_date.strftime('%m-%d %H:%M')
             else:
                 time_str = str(scheduled_date)
-        
-            message = (f"【{review['stage_label']}】{review['title']}\n"f"内容: {review['content']}\n"f"计划时间: {time_str}\n"f"请及时复习以巩固记忆～")
+            
+            # 构建消息内容
+            base_message = f"【{review['stage_label']}】{review['title']}\n内容: {review['content']}\n计划时间: {time_str}"
+            
+            # 如果是延迟计划，添加延迟提示
+            if review.get('is_delayed', False):
+                delay_note = "\n⚠️ 这是延迟的复习计划，请尽快完成！"
+                message = base_message + delay_note
+            else:
+                message = base_message
+                
+            message += "\n请及时复习以巩固记忆～"
             
             # 根据提醒渠道发送
             if review.get("reminder_channel") == "app" and PLYER_AVAILABLE:
@@ -419,7 +466,8 @@ class ReminderService:
                 success = self.system_notifier.notify(title, message, timeout=15)
             
             if success:
-                self.logger.info(f"✅ 已发送复习提醒: {review['title']}")
+                delay_status = "（延迟）" if review.get('is_delayed') else ""
+                self.logger.info(f"✅ 已发送复习提醒{delay_status}: {review['title']}")
             else:
                 self.logger.warning(f"❌ 发送复习提醒失败: {review['title']}")
                 
@@ -497,7 +545,7 @@ def test_notification():
         "🔔 测试通知", 
         "这是一条测试系统通知！\n智能复习闹钟提醒您按时复习。"
     )
-    print(f"通知测试: {'✅ 成功' if success else '❌ 失败'} - reminder.py:500")
+    print(f"通知测试: {'✅ 成功' if success else '❌ 失败'} - reminder.py:548")
     return success
 
 
@@ -509,5 +557,5 @@ if __name__ == "__main__":
     )
     
     # 测试通知功能
-    print("🔔 测试系统提醒功能... - reminder.py:512")
+    print("🔔 测试系统提醒功能... - reminder.py:560")
     test_notification()

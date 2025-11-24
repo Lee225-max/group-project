@@ -16,21 +16,21 @@ try:
     KNOWLEDGE_MODULE_AVAILABLE = True
 except ImportError as e:
     KNOWLEDGE_MODULE_AVAILABLE = False
-    print(f"⚠️ 知识管理模块导入失败，将使用占位符: {e} - app.py:18")
+    print(f"⚠️ 知识管理模块导入失败，将使用占位符: {e} - app.py:19")
 
 try:
     from .scheduler.ui import ReviewSchedulerFrame
     SCHEDULER_MODULE_AVAILABLE = True
 except ImportError as e:
     SCHEDULER_MODULE_AVAILABLE = False
-    print(f"⚠️ 复习调度模块导入失败，将使用占位符: {e} - app.py:25")
+    print(f"⚠️ 复习调度模块导入失败，将使用占位符: {e} - app.py:26")
 
 try:
     from .scheduler.reminder import get_reminder_service
     REMINDER_MODULE_AVAILABLE = True
 except ImportError as e:
     REMINDER_MODULE_AVAILABLE = False
-    print(f"⚠️ 提醒模块导入失败: {e} - app.py:32")
+    print(f"⚠️ 提醒模块导入失败: {e} - app.py:33")
 
 
 class ReviewAlarmApp:
@@ -117,19 +117,32 @@ class ReviewAlarmApp:
             font=ctk.CTkFont(size=14, weight="bold"),
         ).pack(pady=5)
         
-        # 提醒服务状态
+        # 提醒服务状态 - 修改为动态显示间隔
         if self.reminder_service and REMINDER_MODULE_AVAILABLE:
             reminder_status = self.reminder_service.get_service_status()
-            status_text = "🔔 提醒: 运行中" if reminder_status["is_running"] else "🔕 提醒: 已停止"
+            
+            # 动态显示提醒间隔
+            if reminder_status["is_running"]:
+                interval_seconds = reminder_status["interval_seconds"]
+                # 格式化间隔时间
+                if interval_seconds < 60:
+                    status_text = f"🔔 提醒: {interval_seconds}秒"
+                else:
+                    minutes = interval_seconds // 60
+                    status_text = f"🔔 提醒: {minutes}分钟"
+            else:
+                status_text = "🔕 提醒: 已停止"
+                
             status_color = "green" if reminder_status["is_running"] else "gray"
             
-            status_label = ctk.CTkLabel(
+            # 保存状态标签引用，以便后续更新
+            self.status_label = ctk.CTkLabel(
                 user_info_frame,
                 text=status_text,
                 font=ctk.CTkFont(size=12),
                 text_color=status_color
             )
-            status_label.pack(pady=2)
+            self.status_label.pack(pady=2)
 
         # 导航按钮
         nav_buttons = [
@@ -137,7 +150,7 @@ class ReviewAlarmApp:
             ("⏰ 今日复习", self.show_today_review),
             ("📊 学习统计", self.show_analytics),
             ("🔔 提醒设置", self.show_reminder_settings),
-            ("⚙️ 设置", self.show_settings),
+            # ("⚙️ 设置", self.show_settings),
             ("🚪 退出", self.logout),
         ]
 
@@ -171,7 +184,7 @@ class ReviewAlarmApp:
                 knowledge_frame.pack(fill="both", expand=True)
                 return
             except Exception as e:
-                print(f"❌ 知识管理界面初始化失败: {e} - app.py:173")
+                print(f"❌ 知识管理界面初始化失败: {e} - app.py:187")
 
         # 备用：显示占位符
         placeholder = ctk.CTkLabel(
@@ -183,22 +196,22 @@ class ReviewAlarmApp:
 
     def show_today_review(self):
         """显示今日复习界面"""
-        print("🔄 切换到今日复习界面 - app.py:185")
+        print("🔄 切换到今日复习界面 - app.py:199")
         self.clear_content_frame()
 
         if SCHEDULER_MODULE_AVAILABLE:
             try:
-                print("🎯 正在创建今日复习界面... - app.py:190")
+                print("🎯 正在创建今日复习界面... - app.py:204")
                 review_frame = ReviewSchedulerFrame(
                     self.content_frame,
                     self.current_user,
                     self.db_manager
                 )
                 review_frame.pack(fill="both", expand=True)
-                print("✅ 今日复习界面创建成功 - app.py:197")
+                print("✅ 今日复习界面创建成功 - app.py:211")
                 return
             except Exception as e:
-                print(f"❌ 复习调度界面初始化失败: {e} - app.py:200")
+                print(f"❌ 复习调度界面初始化失败: {e} - app.py:214")
                 import traceback
                 traceback.print_exc()
 
@@ -209,8 +222,7 @@ class ReviewAlarmApp:
             font=ctk.CTkFont(size=20, weight="bold"),
         )
         placeholder.pack(expand=True)
-        print("⚠️ 使用今日复习界面占位符 - app.py:211")
-
+        print("⚠️ 使用今日复习界面占位符 - app.py:225")
 
     def show_analytics(self):
         """显示统计分析界面"""
@@ -223,8 +235,8 @@ class ReviewAlarmApp:
             self.db_manager
         )
         analytics_frame.pack(fill="both", expand=True)
-#更改调用
-
+    
+    # 更改调用
     def show_reminder_settings(self):
         """显示提醒设置界面"""
         self.clear_content_frame()
@@ -266,7 +278,7 @@ class ReviewAlarmApp:
         # 系统信息
         info_text = (
             f"检测系统: {status['system']}\n"
-            f"检查间隔: {status['interval_seconds']}秒\n"
+            # f"检查间隔: {status['interval_seconds']}秒\n"
             f"当前用户: {self.current_user.username if self.current_user else '未登录'}\n"
             f"通知支持: {'✅ 可用' if status['plyer_available'] else '⚠️ 受限'}"
         )
@@ -278,7 +290,7 @@ class ReviewAlarmApp:
             justify="left"
         )
         info_label.pack(pady=10)
-        
+        '''
         # 控制按钮
         button_frame = ctk.CTkFrame(settings_frame)
         button_frame.pack(fill="x", padx=50, pady=20)
@@ -324,7 +336,7 @@ class ReviewAlarmApp:
             hover_color="darkorange"
         )
         detailed_test_btn.pack(pady=10)
-        
+        '''
         # 间隔设置
         interval_frame = ctk.CTkFrame(settings_frame)
         interval_frame.pack(fill="x", padx=50, pady=10)
@@ -394,10 +406,34 @@ class ReviewAlarmApp:
                 result = self.reminder_service.start_reminder(self.current_user.id)
                 if result["success"]:
                     self.logger.info("✅ 系统提醒服务已启动")
+                    # 更新导航栏状态显示
+                    self.update_reminder_status_display()
                 else:
                     self.logger.warning(f"启动提醒服务失败: {result['msg']}")
         except Exception as e:
             self.logger.error(f"启动提醒系统失败: {e}")
+
+    def update_reminder_status_display(self):
+        """更新导航栏中的提醒状态显示"""
+        if hasattr(self, 'status_label') and self.reminder_service and REMINDER_MODULE_AVAILABLE:
+            reminder_status = self.reminder_service.get_service_status()
+            
+            # 动态显示提醒间隔
+            if reminder_status["is_running"]:
+                interval_seconds = reminder_status["interval_seconds"]
+                # 格式化间隔时间
+                if interval_seconds < 60:
+                    status_text = f"🔔 提醒: {interval_seconds}秒"
+                else:
+                    minutes = interval_seconds // 60
+                    status_text = f"🔔 提醒: {minutes}分钟"
+            else:
+                status_text = "🔕 提醒: 已停止"
+                
+            status_color = "green" if reminder_status["is_running"] else "gray"
+            
+            # 更新标签文本和颜色
+            self.status_label.configure(text=status_text, text_color=status_color)
 
     def check_reminders_now(self):
         """立即检查并发送提醒"""
@@ -438,6 +474,8 @@ class ReviewAlarmApp:
             result = self.reminder_service.start_reminder(self.current_user.id)
             if result["success"]:
                 self.show_info_dialog("成功", "提醒服务已重启")
+                # 更新导航栏状态显示
+                self.update_reminder_status_display()
                 # 刷新界面
                 self.show_reminder_settings()
             else:
@@ -452,6 +490,8 @@ class ReviewAlarmApp:
         result = self.reminder_service.set_reminder_interval(interval_seconds)
         if result["success"]:
             self.show_info_dialog("成功", f"提醒间隔已设置为 {interval_seconds} 秒")
+            # 更新导航栏状态显示
+            self.update_reminder_status_display()
         else:
             self.show_error_dialog("失败", result["msg"])
 
@@ -601,6 +641,8 @@ class ReviewAlarmApp:
         if self.reminder_service and REMINDER_MODULE_AVAILABLE:
             self.reminder_service.stop_reminder()
             self.logger.info("提醒服务已停止")
+            # 更新导航栏状态显示
+            self.update_reminder_status_display()
         
         self.current_user = None
         self.show_login()
