@@ -24,8 +24,6 @@ plt.switch_backend("Agg")  # 使用非交互式后端
 class AnalyticsService:
     """统计分析服务实现"""
 
-
-
     def __init__(self, db_manager: DatabaseManager):
         self.db_manager = db_manager
 
@@ -115,6 +113,7 @@ class AnalyticsService:
 
         finally:
             session.close()
+
     def calculate_user_overview(self, user_id: int) -> dict:
         """统计用户总体学习概况"""
         session = self.db_manager.get_session()
@@ -174,22 +173,21 @@ class AnalyticsService:
 
         finally:
             session.close()
-    def get_user_stats(self, user_id):
-        """获取用户的总体统计（供测试和UI使用）"""
-        try:
-            from src.database.manager import DatabaseManager
 
+    def get_user_stats(self, user_id):
+        """获取用户总体统计（供测试和UI使用）"""
+        try:
             db = DatabaseManager()
             stats = db.get_overall_stats(user_id)
 
-            # 默认结构包括测试所需键
             default_stats = {
-                "total_knowledge_items": 0,  # ✅ 测试需要这个键名
-                "total_knowledge": 0,  # ✅ 兼容UI旧字段
+                "total_knowledge_items": 0,
+                "total_knowledge": 0,
                 "mastered_knowledge": 0,
                 "completion_rate_30d": 0.0,
                 "streak_days": 0,
                 "last_review_date": "暂无",
+                "today_review_count": 0,  # ✅ 必加
                 "today_stats": {
                     "total_today": 0,
                     "completed_today": 0,
@@ -200,10 +198,12 @@ class AnalyticsService:
             }
 
             if stats:
-                # 将数据库返回的结果合并进 default_stats
                 default_stats.update(stats)
-                # ✅ 确保 total_knowledge_items 同步更新
                 default_stats["total_knowledge_items"] = stats.get("total_knowledge", 0)
+
+            # ✅ 聚合本地概况
+            overview = self.calculate_user_overview(user_id)
+            default_stats.update(overview)
 
             return default_stats
 
@@ -217,6 +217,7 @@ class AnalyticsService:
                 "completion_rate_30d": 0.0,
                 "streak_days": 0,
                 "last_review_date": "暂无",
+                "today_review_count": 0,  # ✅ 异常时也要带上
                 "today_stats": {
                     "total_today": 0,
                     "completed_today": 0,
