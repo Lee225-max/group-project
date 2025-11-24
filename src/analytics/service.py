@@ -226,7 +226,8 @@ class AnalyticsService:
                 },
                 "ebbinghaus_distribution": {},
             }
-    def _calculate_streak_days(self, session, user_id: int) -> int:
+
+    def _calculate_streak_days (self, session, user_id: int) -> int:
         """计算连续学习天数"""
 
         # 获取用户的所有复习记录日期
