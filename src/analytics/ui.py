@@ -4,7 +4,7 @@
 # @File : ui.py
 # @Software: PyCharm
 """
-统计分析界面 - 成员D负责
+统计分析界面
 """
 
 import customtkinter as ctk
@@ -111,7 +111,7 @@ class AnalyticsFrame(ctk.CTkFrame):
 
     def create_stat_card(self, parent, title, value, icon, color):
         """创建统计卡片"""
-        card = ctk.CTkFrame(parent, border_width=2, border_color=color)
+        card = ctk.CTkFrame(parent, border_width=2, border_color=color,fg_color="white")
 
         # 图标和标题
         header_frame = ctk.CTkFrame(card, fg_color="transparent")
@@ -120,7 +120,8 @@ class AnalyticsFrame(ctk.CTkFrame):
         ctk.CTkLabel(
             header_frame,
             text=f"{icon} {title}",
-            font=ctk.CTkFont(size=14, weight="bold")
+            font=ctk.CTkFont(size=14, weight="bold"),
+            text_color="black"
         ).pack(side="left")
 
         # 数值显示
@@ -132,7 +133,7 @@ class AnalyticsFrame(ctk.CTkFrame):
         )
         value_label.pack(pady=10)
 
-        return card, value_label#value_label
+        return card, value_label
 
     def setup_trend_tab(self):
         """设置趋势分析选项卡"""
