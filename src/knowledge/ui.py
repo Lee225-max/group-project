@@ -5,7 +5,7 @@
 import customtkinter as ctk
 from tkinter import messagebox
 from src.knowledge.service import KnowledgeService
-
+from src.scheduler.service import SchedulerService
 
 class KnowledgeManagementFrame(ctk.CTkFrame):
     """知识管理界面 - 支持今日复习联动"""
@@ -15,6 +15,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         self.current_user = current_user
         self.knowledge_service = KnowledgeService(db_manager)
         self.db_manager = db_manager
+        self.scheduler_service = SchedulerService(db_manager)
         self.show_only_today = False  # 今日复习筛选状态
 
         # 颜色配置
@@ -325,6 +326,22 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         )
         time_label.grid(row=0, column=1, sticky="w", padx=(20, 0))
 
+        # 下一阶段 & 时间
+        next_stage = item.get("next_stage_desc")
+        next_review_at = item.get("next_review_at")
+        if next_stage and next_review_at:
+            ctk.CTkLabel(
+                meta_frame,
+                text=f"➡️ 下一阶段：{next_stage}",
+                font=ctk.CTkFont(size=11),
+                text_color=self.colors['primary']
+            ).grid(row=2, column=0, sticky="w", pady=(5, 0))
+            ctk.CTkLabel(
+                meta_frame,
+                text=f"🕒 复习时间：{next_review_at}",
+                font=ctk.CTkFont(size=11),
+                text_color="#666666"
+            ).grid(row=2, column=1, sticky="w", padx=(20, 0))
         # 内容预览
         content_preview = item.get('content', '')
         if content_preview:
@@ -523,7 +540,9 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
                 self,
                 adapted_item,
                 self.current_user,
-                self.knowledge_service.db_manager,
+                self.scheduler_service,
+                self.db_manager,
+                #self.knowledge_service.db_manager,
                 refresh_callback=self.load_knowledge_items
             )
         except ImportError:

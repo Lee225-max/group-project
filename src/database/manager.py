@@ -163,12 +163,18 @@ class DatabaseManager:
                 # 构建状态描述
                 if is_completed_all:
                     status = "✅ 已掌握"
+                    next_stage_desc = None
+                    next_time_str = None
                 elif today_schedule:
                     stage_desc = EbbinghausConfig.get_stage_description(
                         today_schedule.interval_index
                     )
                     status = f"📅 今日复习（{stage_desc}）"
+                    next_stage_desc = stage_desc
+                    next_time_str = today_schedule.scheduled_date.strftime("%Y-%m-%d %H:%M")
                 else:
+                    next_stage_desc = None
+                    next_time_str = None
                     next_schedule = (
                         session.query(ReviewSchedule)
                         .filter(
@@ -179,11 +185,12 @@ class DatabaseManager:
                         .first()
                     )
                     if next_schedule:
-                        days_diff = (next_schedule.scheduled_date - datetime.now()).days
                         stage_desc = EbbinghausConfig.get_stage_description(
                             next_schedule.interval_index
                         )
-                        status = f"⏳ 待复习（{days_diff}天后，{stage_desc}）"
+                        next_time_str = next_schedule.scheduled_date.strftime("%Y-%m-%d %H:%M")
+                        status = f"⏳ 待复习（{stage_desc}，{next_time_str}）"
+                        next_stage_desc = stage_desc
                     else:
                         status = "❌ 无复习计划"
 
@@ -200,6 +207,8 @@ class DatabaseManager:
                         ),
                         "review_status": status,
                         "is_today_review": True if today_schedule else False,
+                        "next_stage_desc": next_stage_desc,
+                        "next_review_at": next_time_str,
                     }
                 )
 

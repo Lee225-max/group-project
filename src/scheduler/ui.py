@@ -11,9 +11,10 @@ from src.database.models import KnowledgeItem
 class ReviewDialog(ctk.CTkToplevel):
     """复习对话框 - 采用知识管理页面样式"""
 
-    def __init__(self, parent, review, scheduler_service, db_manager, refresh_callback):
+    def __init__(self, parent, review, current_user,scheduler_service, db_manager, refresh_callback):
         super().__init__(parent)
         self.review = review
+        self.current_user = current_user
         self.scheduler_service = scheduler_service
         self.db_manager = db_manager
         self.refresh_callback = refresh_callback
@@ -280,7 +281,7 @@ class ReviewDialog(ctk.CTkToplevel):
 
             result = self.scheduler_service.complete_review(
                 schedule_id,
-                knowledge_id,
+                self.current_user.id,
                 effectiveness,
                 recall_score_percent
             )
@@ -768,6 +769,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
             ReviewDialog(
                 self,
                 review,
+                self.current_user,
                 self.scheduler_service,
                 self.db_manager,
                 self.load_today_reviews,
