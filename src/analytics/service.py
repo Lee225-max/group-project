@@ -1,20 +1,17 @@
 # -*- codeing =utf-8 -*-
-from typing import Dict, List, Optional, Optional, Optional, Any  # @Time : 2025/11/24 0:53
+# @Time : 2025/11/24 0:53
 # @Author: Muncy
 # @File : service.py
 # @Software: PyCharm
 """
 统计分析服务
 """
-
+from typing import Dict, List
 import base64
 import os
 from datetime import datetime, timedelta
 from io import BytesIO
 
-# import matplotlib
-
-# matplotlib.use('Agg')  # 使用非交互式后端
 import matplotlib.font_manager as fm
 import matplotlib.pyplot as plt
 

@@ -2,7 +2,7 @@
 调度器服务 - 完整实现版
 """
 
-from src.database.manager import DatabaseManager
+
 from src.database.models import ReviewSchedule
 from datetime import datetime, timedelta
 
