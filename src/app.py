@@ -609,6 +609,17 @@ class ReviewAlarmApp:
         """运行应用"""
         self.root.mainloop()
 
+    def refresh_all_views(self):
+        """全局刷新 今日复习 + 知识管理"""
+        try:
+            if hasattr(self, "today_frame"):
+                self.today_frame.load_today_reviews()
+            if hasattr(self, "knowledge_frame"):
+                self.knowledge_frame.load_knowledge_items()
+            print("✅ 全局刷新完成")
+        except Exception as e:
+            print(f"❌ 全局刷新出错: {e}")
+
 
 if __name__ == "__main__":
     app = ReviewAlarmApp()

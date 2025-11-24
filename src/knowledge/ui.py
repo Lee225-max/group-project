@@ -398,22 +398,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
         )
         delete_btn.pack(side="left", padx=(0, 8))
 
-        # 复习按钮
-        review_text = "📚 复习" if not is_today_review else "🎯 立即复习"
-        review_color = self.colors['success'] if not is_today_review else self.colors['today']
-        review_hover = '#139C8B' if not is_today_review else '#E55A4D'
-
-        review_btn = ctk.CTkButton(
-            button_frame,
-            text=review_text,
-            command=lambda: self.review_item(item),
-            fg_color=review_color,
-            hover_color=review_hover,
-            **btn_style
-        )
-        review_btn.pack(side="left", padx=(0, 8))
-
-        # 加入今日复习按钮（针对非今日复习的知识点）
+        # ⭐ 加入今日复习按钮（仅对非今日复习知识点显示）
         if not is_today_review:
             add_today_btn = ctk.CTkButton(
                 button_frame,
@@ -425,7 +410,6 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
                 **btn_style
             )
             add_today_btn.pack(side="left")
-
     def _ensure_dict_format(self, item):
         """确保项目是字典格式"""
         if hasattr(item, 'get'):
@@ -522,7 +506,7 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
                 self.load_knowledge_items()
                 messagebox.showinfo("成功", "✅ 知识点已删除")
 
-    def review_item(self, item):
+    '''def review_item(self, item):
         """复习知识点"""
         try:
             from src.scheduler.ui import ReviewDialog
@@ -548,15 +532,15 @@ class KnowledgeManagementFrame(ctk.CTkFrame):
                 self.current_user,
                 self.scheduler_service,
                 self.db_manager,
-                # self.knowledge_service.db_manager,
-                refresh_callback=self.load_knowledge_items
+                refresh_callback=self.master.refresh_all_views if hasattr(self.master,
+                                                                          "refresh_all_views") else self.load_knowledge_items
             )
         except ImportError:
             messagebox.showinfo("提示", "复习模块尚未实现")
         except Exception as e:
             messagebox.showerror("错误", f"打开复习对话框失败: {str(e)}")
             print(f"详细错误信息: {e} - ui.py:533")
-
+'''
     def on_search(self, event=None):
         """搜索功能"""
         search_term = self.search_entry.get().strip()

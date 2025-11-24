@@ -7,25 +7,26 @@ from enum import Enum
 
 class EbbinghausStage(Enum):
     """艾宾浩斯复习阶段"""
-    STAGE_1 = 0  # 20分钟
+    STAGE_1 = 0  # 0分钟
     STAGE_2 = 1  # 1小时
     STAGE_3 = 2  # 12小时（睡前）
     STAGE_4 = 3  # 24小时（第2天）
     STAGE_5 = 4  # 4天
     STAGE_6 = 5  # 7天
-    STAGE_7 = 6  # 15天
-
+    STAGE_7 = 6
+    STAGE_8 = 7  # 15天
 
 class EbbinghausConfig:
     """艾宾浩斯遗忘曲线配置管理"""
 
     # 艾宾浩斯遗忘曲线间隔（小时）
-    INTERVALS_HOURS = [0, 1, 12, 24, 96, 168, 360]
+    INTERVALS_HOURS = [0, 1/3, 1, 12, 24, 96, 168, 360]
 
     # 阶段描述
     STAGE_DESCRIPTIONS = [
-        # "20分钟后",
+        #
         "立即复习",
+        "20分钟后",
         "1小时后",
         "12小时后（睡前）",
         "1天后",
@@ -36,13 +37,15 @@ class EbbinghausConfig:
 
     # 阶段标签
     STAGE_LABELS = [
+        "立即复习",
         "第1阶段",
         "第2阶段",
         "第3阶段",
         "第4阶段",
         "第5阶段",
         "第6阶段",
-        "第7阶段"
+        "第7阶段",
+
     ]
 
     @classmethod

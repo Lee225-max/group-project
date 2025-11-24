@@ -2,6 +2,9 @@
 调度器服务 - 完整实现版
 """
 
+from src.database.manager import DatabaseManager
+from src.database.models import ReviewSchedule
+from datetime import datetime, timedelta
 
 class SchedulerService:
     """调度器服务 - 完整实现版"""
@@ -160,3 +163,34 @@ class SchedulerService:
         except Exception:
             print("❌ 获取每日复习统计失败 - service.py:161")
             return []
+
+    def delay_review(self, schedule_id: int, delay_minutes: int = 20) -> bool:
+        """延迟复习计划（将下次复习时间延迟 delay_minutes 分钟）"""
+        try:
+            session = self.db_manager.get_session()
+            current_schedule = session.query(ReviewSchedule).filter(
+                ReviewSchedule.id == schedule_id
+            ).first()
+
+            if not current_schedule:
+                print(f"❌ [DELAY DEBUG] 未找到复习计划: {schedule_id} - service.py")
+                session.close()
+                return False
+
+            # 计算新的提醒时间（当前时间 + 延迟分钟）
+            new_time = datetime.now() + timedelta(minutes=delay_minutes)
+
+            # 更新数据库
+            success = self.db_manager.update_review_schedule_time(schedule_id, new_time)
+            session.close()
+
+            if success:
+                print(f"✅ [DELAY DEBUG] 已延迟复习计划 {schedule_id}，新的时间: {new_time}")
+                return True
+            else:
+                print(f"❌ [DELAY DEBUG] 延迟复习计划失败: {schedule_id}")
+                return False
+
+        except Exception as e:
+            print(f"❌ [DELAY ERROR] 延迟复习出错: {e}")
+            return False

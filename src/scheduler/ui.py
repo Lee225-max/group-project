@@ -235,6 +235,7 @@ class ReviewDialog(ctk.CTkToplevel):
         button_frame.grid_columnconfigure(1, weight=1)
 
         # 完成复习按钮
+        # 完成复习按钮（保持原样）
         complete_btn = ctk.CTkButton(
             button_frame,
             text="✅ 完成复习",
@@ -246,17 +247,29 @@ class ReviewDialog(ctk.CTkToplevel):
         )
         complete_btn.grid(row=0, column=0, padx=(0, 10))
 
-        # 取消按钮
-        cancel_btn = ctk.CTkButton(
+        # 稍后复习按钮（新增）
+        delay_btn = ctk.CTkButton(
             button_frame,
             text="⏰ 稍后复习",
-            command=self.destroy,
+            command=self.delay_review,
             height=45,
-            fg_color="#6C757D",
-            hover_color="#5A6268",
-            font=ctk.CTkFont(size=14)
+            fg_color=self.colors['warning'],
+            hover_color='#E0A800',
+            font=ctk.CTkFont(size=14, weight="bold")
         )
-        cancel_btn.grid(row=0, column=1, padx=(10, 0))
+        delay_btn.grid(row=0, column=1, padx=10)
+
+        # 取消复习按钮（新增）
+        cancel_btn = ctk.CTkButton(
+            button_frame,
+            text="❌ 取消复习",
+            command=self.cancel_review,
+            height=45,
+            fg_color=self.colors['danger'],
+            hover_color='#A63225',
+            font=ctk.CTkFont(size=14, weight="bold")
+        )
+        cancel_btn.grid(row=0, column=2, padx=(10, 0))
 
     def on_slider_change(self, value):
         """滑块值改变回调"""
@@ -309,8 +322,11 @@ class ReviewDialog(ctk.CTkToplevel):
                 messagebox.showinfo("成功", "🎉 复习完成！")
 
                 # 1️⃣ 同步刷新今日复习界面
-                if self.refresh_callback:
-                    self.refresh_callback()
+                if callable(self.refresh_callback):
+                    try:
+                        self.refresh_callback()
+                    except Exception as e:
+                        print(f"⚠️ 回调函数执行失败: {e} - ui.py:after_complete")
 
                 # 2️⃣ 同步刷新知识管理界面
                 try:
@@ -339,6 +355,68 @@ class ReviewDialog(ctk.CTkToplevel):
 
         except Exception as e:
             messagebox.showerror("错误", f"复习完成失败: {str(e)}")
+
+    def delay_review(self):
+        """延迟复习 20 分钟后再次提醒"""
+        try:
+            schedule_id = self.review.get('id') or self.review.get('schedule_id')
+            if not schedule_id:
+                messagebox.showerror("错误", "❌ 无法获取复习计划ID")
+                return
+
+            # 弹窗确认
+            if not messagebox.askyesno("稍后复习", "确定要20分钟后再次提醒复习吗？"):
+                return
+
+            success = self.scheduler_service.delay_review(schedule_id, delay_minutes=20)
+            if success:
+                messagebox.showinfo("成功", "⏰ 已设置20分钟后再次提醒复习！")
+                if callable(self.refresh_callback):
+                    self.refresh_callback()
+                self.destroy()
+                print(f"✅ [DELAY] 已延迟复习计划: {schedule_id}")
+            else:
+                messagebox.showerror("错误", "延迟复习失败，请重试。")
+                print(f"❌ [DELAY] 延迟复习失败: {schedule_id}")
+        except Exception as e:
+            messagebox.showerror("错误", f"延迟复习出错: {e}")
+            print(f"❌ [DELAY ERROR] {e}")
+
+    def cancel_review(self):
+        """取消复习计划"""
+        try:
+            if not messagebox.askyesno(
+                    "确认取消",
+                    "确定要取消这个知识点的复习计划吗？\n\n该知识点将：\n• 从今日列表中移除\n• 回到知识管理\n• 状态变为“无复习计划”",
+                    icon="warning"
+            ):
+                return
+
+            knowledge_id = self.review.get('knowledge_item_id') or self.review.get('knowledge_id')
+            if not knowledge_id:
+                messagebox.showerror("错误", "❌ 无法获取知识点ID")
+                return
+
+            success = self.db_manager.cancel_review_schedule(
+                knowledge_item_id=knowledge_id,
+                user_id=self.current_user.id
+            )
+
+            if success:
+                messagebox.showinfo(
+                    "取消成功",
+                    "✅ 已取消该知识点的复习计划"
+                )
+                if callable(self.refresh_callback):
+                    self.refresh_callback()
+                self.destroy()
+                print(f"✅ [CANCEL] 已取消知识点 {knowledge_id} 的复习计划")
+            else:
+                messagebox.showerror("错误", "取消复习计划失败，请重试。")
+                print(f"❌ [CANCEL] 取消失败: {knowledge_id}")
+        except Exception as e:
+            messagebox.showerror("错误", f"取消复习时出错: {e}")
+            print(f"❌ [CANCEL ERROR] {e}")
 
 
 class ReviewSchedulerFrame(ctk.CTkFrame):
@@ -809,6 +887,7 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
 
     def start_review(self, review):
         """开始复习"""
+
         try:
             ReviewDialog(
                 self,
@@ -816,7 +895,8 @@ class ReviewSchedulerFrame(ctk.CTkFrame):
                 self.current_user,
                 self.scheduler_service,
                 self.db_manager,
-                self.load_today_reviews,
-            )
+                self.master.refresh_all_views if hasattr(self.master,
+                                                             "refresh_all_views") else self.load_today_reviews,
+                )
         except Exception as e:
             messagebox.showerror("错误", f"打开复习对话框失败: {str(e)}")
